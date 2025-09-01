@@ -1,0 +1,1 @@
+org.springframework.context.ApplicationContextInitializer=com.allterra.server.config.H2TimeZoneContextInitializer

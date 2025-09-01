@@ -1,0 +1,55 @@
+version: '3'
+services:
+  allterra:
+    depends_on:
+      - postgres
+    container_name: allterra-back
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: allterra
+    ports:
+      - 8080:8080
+      - 8081:8081
+    networks:
+      - bridge-network
+  postgres:
+    container_name: postgres
+    image: postgres:16.4
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: allterradb
+      POSTGRES_SCHEMA: allterra
+    volumes:
+      - ./src/main/resources/database/db-scripts/init.sh:/docker-entrypoint-initdb.d/init.sh
+    networks:
+      - bridge-network
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+      - ./monitoring/grafana/configs/custom.ini:/var/lib/grafana/configs/custom.ini
+    environment:
+      GF_PROVISIONING_PATH: /etc/grafana/provisioning
+      GF_PATHS_CONFIG: /var/lib/grafana/configs/custom.ini
+    depends_on:
+      - prometheus
+networks:
+  bridge-network:
+    driver: bridge
