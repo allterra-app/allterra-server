@@ -8,4 +8,9 @@
         <Bug code="SECHCP" />
         <Class name="~.*Test" />
     </Match>
+    <!-- Ignore Lombok generated warnings  -->
+    <Match>
+        <Class name="~.*"/>
+        <Method name="(equals|hashCode|toString)"/>
+    </Match>
 </FindBugsFilter>

@@ -15,3 +15,11 @@ spring:
     user: sa
     password: password
     driver-class-name: org.h2.Driver
+
+server:
+  servlet:
+    context-path: /api/v1
+
+security:
+  jwt:
+    secret: AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ==

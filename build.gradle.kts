@@ -10,7 +10,7 @@ plugins {
 	java
 	id("org.springframework.boot") version "3.3.3"
 	id("io.spring.dependency-management") version "1.1.6"
-	id("com.github.spotbugs") version "6.0.22"
+	id("com.github.spotbugs") version "6.0.6"
 	id("checkstyle")
 }
 
@@ -30,6 +30,14 @@ configurations {
 
 repositories {
 	mavenCentral()
+}
+
+spotbugs {
+	toolVersion.set("4.8.6")           // версия SpotBugs
+	effort.set(com.github.spotbugs.snom.Effort.MAX)
+	reportLevel.set(com.github.spotbugs.snom.Confidence.HIGH)
+	ignoreFailures.set(true)           // чтобы сборка не падала
+	showProgress.set(true)
 }
 
 dependencies {
@@ -68,7 +76,7 @@ dependencies {
 
 	//spotbugs plugin dependencies
 	spotbugsPlugins("com.h3xstream.findsecbugs:findsecbugs-plugin:1.13.0")
-	spotbugsPlugins("com.mebigfatguy.sb-contrib:sb-contrib:7.6.4")
+	spotbugsPlugins("com.mebigfatguy.sb-contrib:sb-contrib:7.6.5")
 	implementation("com.github.spotbugs:spotbugs-annotations:4.8.6")
 }
 

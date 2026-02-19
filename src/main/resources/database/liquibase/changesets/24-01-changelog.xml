@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd" objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <changeSet id="1758742481194-1" author="andrey-shipulya">
+        <createTable tableName="poi">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_poi"/>
+            </column>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="rating" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="actual" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="url" type="VARCHAR(255)"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="modified_at" type="DATETIME"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1758742481194-2" author="andrey-shipulya">
+        <createTable tableName="poi_photos">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_poi_photos"/>
+            </column>
+            <column name="url" type="VARCHAR(255)"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="modified_at" type="DATETIME"/>
+            <column name="poi_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="1758742481194-3" author="andrey-shipulya">
+        <createTable tableName="post_photos">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_post_photos"/>
+            </column>
+            <column name="url" type="VARCHAR(255)"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="modified_at" type="DATETIME"/>
+            <column name="post_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="1758742481194-4" author="andrey-shipulya">
+        <createTable tableName="posts">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_posts"/>
+            </column>
+            <column name="user_id" type="UUID"/>
+            <column name="title" type="VARCHAR(255)"/>
+            <column name="body" type="VARCHAR(255)"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="modified_at" type="DATETIME"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1758742481194-5" author="andrey-shipulya">
+        <createTable tableName="user_photos">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_user_photos"/>
+            </column>
+            <column name="url" type="VARCHAR(255)"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="modified_at" type="DATETIME"/>
+            <column name="user_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="1758742481194-6" author="andrey-shipulya">
+        <createTable tableName="user_pois">
+            <column name="poi_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="1758742481194-7" author="andrey-shipulya">
+        <createTable tableName="users">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_users"/>
+            </column>
+            <column name="username" type="VARCHAR(255)"/>
+            <column name="password" type="VARCHAR(255)"/>
+            <column name="email" type="VARCHAR(255)"/>
+            <column name="first_name" type="VARCHAR(255)"/>
+            <column name="last_name" type="VARCHAR(255)"/>
+            <column name="birth_date" type="DATE"/>
+            <column name="phone_number" type="VARCHAR(255)"/>
+            <column name="city" type="VARCHAR(255)"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="modified_at" type="DATETIME"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1758742481194-8" author="andrey-shipulya">
+        <addUniqueConstraint columnNames="poi_id" constraintName="uc_poi_photos_poi" tableName="poi_photos"/>
+    </changeSet>
+    <changeSet id="1758742481194-9" author="andrey-shipulya">
+        <addUniqueConstraint columnNames="user_id" constraintName="uc_user_photos_user" tableName="user_photos"/>
+    </changeSet>
+    <changeSet id="1758742481194-10" author="andrey-shipulya">
+        <addForeignKeyConstraint baseColumnNames="poi_id" baseTableName="poi_photos" constraintName="FK_POI_PHOTOS_ON_POI"
+                                 referencedColumnNames="id" referencedTableName="poi"/>
+    </changeSet>
+    <changeSet id="1758742481194-11" author="andrey-shipulya">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="posts" constraintName="FK_POSTS_ON_USER"
+                                 referencedColumnNames="id" referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1758742481194-12" author="andrey-shipulya">
+        <addForeignKeyConstraint baseColumnNames="post_id" baseTableName="post_photos" constraintName="FK_POST_PHOTOS_ON_POST"
+                                 referencedColumnNames="id" referencedTableName="posts"/>
+    </changeSet>
+    <changeSet id="1758742481194-13" author="andrey-shipulya">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="user_photos" constraintName="FK_USER_PHOTOS_ON_USER"
+                                 referencedColumnNames="id" referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1758742481194-14" author="andrey-shipulya">
+        <addForeignKeyConstraint baseColumnNames="poi_id" baseTableName="user_pois" constraintName="fk_user_pois_on_poi"
+                                 referencedColumnNames="id" referencedTableName="poi"/>
+    </changeSet>
+    <changeSet id="1758742481194-15" author="andrey-shipulya">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="user_pois" constraintName="fk_user_pois_on_user"
+                                 referencedColumnNames="id" referencedTableName="users"/>
+    </changeSet>
+
+    <changeSet id="1758742481194-16" author="andrey-shipulya">
+        <addColumn tableName="users">
+            <column name="subscription_plan" type="VARCHAR(50)" defaultValue="FREE"/>
+            <column name="subscription_started_at" type="DATETIME"/>
+            <column name="subscription_expires_at" type="DATETIME"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="1758742481194-17" author="andrey-shipulya">
+        <createTable tableName="user_roles">
+            <column name="user_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1758742481194-18" author="andrey-shipulya">
+        <addPrimaryKey tableName="user_roles" columnNames="user_id, role" constraintName="pk_user_roles"/>
+    </changeSet>
+
+    <changeSet id="1758742481194-19" author="andrey-shipulya">
+        <addForeignKeyConstraint baseTableName="user_roles" baseColumnNames="user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_user_roles_on_user"/>
+    </changeSet>
+
+    <changeSet id="1758742481194-20" author="andrey-shipulya">
+        <sql>INSERT INTO user_roles (user_id, role) SELECT id, 'USER' FROM users;</sql>
+    </changeSet>
+
+    <changeSet id="1758742481194-21" author="andrey-shipulya">
+        <addColumn tableName="users">
+            <column name="email_verified" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="deleted_at" type="DATETIME"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="1758742481194-22" author="andrey-shipulya">
+        <createTable tableName="refresh_tokens">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_refresh_tokens"/>
+            </column>
+            <column name="user_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="token_hash" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uc_refresh_tokens_token_hash"/>
+            </column>
+            <column name="expires_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="revoked_at" type="DATETIME"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1758742481194-23" author="andrey-shipulya">
+        <addForeignKeyConstraint baseTableName="refresh_tokens" baseColumnNames="user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_refresh_tokens_on_user"/>
+    </changeSet>
+
+    <changeSet id="1758742481194-24" author="andrey-shipulya">
+        <createIndex tableName="refresh_tokens" indexName="idx_refresh_tokens_user_id">
+            <column name="user_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

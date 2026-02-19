@@ -8,6 +8,13 @@ services:
       context: .
       dockerfile: Dockerfile
     image: allterra
+    environment:
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      JWT_PREVIOUS_SECRET: ${JWT_PREVIOUS_SECRET:-}
+      JWT_CURRENT_KEY_ID: ${JWT_CURRENT_KEY_ID:-current}
+      SEED_ADMIN_ENABLED: ${SEED_ADMIN_ENABLED:-false}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@allterra.local}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
     ports:
       - 8080:8080
       - 8081:8081
