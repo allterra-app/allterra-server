@@ -114,4 +114,22 @@ public class RouteService {
                 .orElseThrow(() -> new ResourceNotFoundException(String.format("Route with id %s not found", id)));
         routeRepository.delete(route);
     }
+
+    /**
+     * Deletes route for user.
+     *
+     * @param userId user id
+     * @param routeId route id
+     */
+    public void deleteForUser(final java.util.UUID userId, final java.util.UUID routeId) {
+        final var route = routeRepository.findById(routeId)
+                .orElseThrow(() -> new ResourceNotFoundException(String.format("Route with id %s not found", routeId)));
+        final var routeUserId = route.getUser() == null ? null : route.getUser().getId();
+        if (routeUserId == null || !routeUserId.equals(userId)) {
+            throw new ResourceNotFoundException(
+                    String.format("Route with id %s not found for user %s", routeId, userId)
+            );
+        }
+        routeRepository.delete(route);
+    }
 }

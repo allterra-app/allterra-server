@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -137,6 +138,7 @@ public class PoiController {
      * @param poiId id of poi for delete
      */
     @DeleteMapping("/{poiId}")
+    @PreAuthorize("@poiAccessGuard.canAccessPoiById(#poiId, authentication)")
     public ResponseEntity<Void> deletePoi(final @PathVariable java.util.UUID poiId) {
         if (poiId == null) {
             log.info("Poi not found: null");
@@ -144,6 +146,24 @@ public class PoiController {
 
         log.info("Deleting poi: [{}]", poiId);
         poiService.deletePoi(poiId);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Deletes poi for user by id.
+     *
+     * @param userId user id
+     * @param poiId poi id
+     * @return no content
+     */
+    @DeleteMapping("/users/{userId}/{poiId}")
+    @PreAuthorize("@userAccessGuard.canAccessUserById(#userId, authentication)")
+    public ResponseEntity<Void> deletePoiForUser(
+            final @PathVariable java.util.UUID userId,
+            final @PathVariable java.util.UUID poiId
+    ) {
+        log.info("Deleting poi: [{}] for user [{}]", poiId, userId);
+        poiService.deletePoiForUser(userId, poiId);
         return ResponseEntity.noContent().build();
     }
 }

@@ -19,6 +19,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -112,9 +113,47 @@ class PoiServiceTest {
     }
 
     @Test
-    void deletePoiShouldDelegateToRepository() {
-        poiService.deletePoi(com.allterra.server.TestUuids.id(7));
+    void deletePoiShouldDeleteEntityWhenExists() {
+        var poiId = com.allterra.server.TestUuids.id(7);
+        var poi = Poi.builder().id(poiId).build();
+        when(poiRepository.findById(poiId)).thenReturn(Optional.of(poi));
 
-        verify(poiRepository).deleteById(com.allterra.server.TestUuids.id(7));
+        poiService.deletePoi(poiId);
+
+        verify(poiRepository).delete(poi);
+    }
+
+    @Test
+    void deletePoiForUserShouldUnlinkAndDeleteWhenNoOtherUsersLinked() {
+        var userId = com.allterra.server.TestUuids.id(1);
+        var poiId = com.allterra.server.TestUuids.id(7);
+        var poi = Poi.builder().id(poiId).build();
+        var user = User.builder().id(userId).pois(new ArrayList<>(List.of(poi))).build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(poiRepository.findById(poiId)).thenReturn(Optional.of(poi));
+        when(userRepository.save(user)).thenReturn(user);
+        when(poiRepository.existsByIdAndUsers_IdNot(poiId, userId)).thenReturn(false);
+
+        poiService.deletePoiForUser(userId, poiId);
+
+        assertThat(user.getPois()).isEmpty();
+        verify(poiRepository).delete(poi);
+    }
+
+    @Test
+    void deletePoiForUserShouldThrowWhenPoiNotLinkedToUser() {
+        var userId = com.allterra.server.TestUuids.id(1);
+        var poiId = com.allterra.server.TestUuids.id(7);
+        var poi = Poi.builder().id(poiId).build();
+        var user = User.builder().id(userId).pois(new ArrayList<>()).build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(poiRepository.findById(poiId)).thenReturn(Optional.of(poi));
+
+        assertThatThrownBy(() -> poiService.deletePoiForUser(userId, poiId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Poi with id " + poiId + " not found for user " + userId);
+        verify(poiRepository, never()).delete(poi);
     }
 }

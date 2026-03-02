@@ -14,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 class RouteServicePersistenceIntegrationTest {
@@ -67,5 +68,38 @@ class RouteServicePersistenceIntegrationTest {
         assertThat(routes.getFirst().getTitle()).isEqualTo("Morning route");
         assertThat(routes.getFirst().getGpxContent()).contains("<gpx>");
         assertThat(routes.getFirst().getUserId()).isEqualTo(user.getId());
+    }
+
+    @Test
+    void deleteForUserShouldDeleteOnlyOwnedRoute() {
+        var owner = userRepository.save(
+                User.builder()
+                        .email("route-owner@allterra.com")
+                        .password("password")
+                        .roles(Set.of(UserRole.USER))
+                        .subscriptionPlan(SubscriptionPlan.FREE)
+                        .build()
+        );
+        var other = userRepository.save(
+                User.builder()
+                        .email("route-other@allterra.com")
+                        .password("password")
+                        .roles(Set.of(UserRole.USER))
+                        .subscriptionPlan(SubscriptionPlan.FREE)
+                        .build()
+        );
+
+        var createRequest = RouteCreateRequestDto.builder()
+                .title("Private route")
+                .gpxContent("<gpx><trk><trkseg><trkpt lat=\"10\" lon=\"20\"/></trkseg></trk></gpx>")
+                .build();
+        var created = routeService.createForUser(owner.getId(), createRequest);
+
+        assertThatThrownBy(() -> routeService.deleteForUser(other.getId(), created.getId()))
+                .hasMessageContaining("not found for user");
+
+        routeService.deleteForUser(owner.getId(), created.getId());
+
+        assertThat(routeRepository.findById(created.getId())).isEmpty();
     }
 }

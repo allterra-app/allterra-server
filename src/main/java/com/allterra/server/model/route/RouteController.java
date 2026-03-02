@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -114,9 +115,28 @@ public class RouteController {
      * @return no content
      */
     @DeleteMapping("/{routeId}")
+    @PreAuthorize("@routeAccessGuard.canAccessRouteById(#routeId, authentication)")
     public ResponseEntity<Void> delete(final @PathVariable java.util.UUID routeId) {
         log.info("Delete route [{}]", routeId);
         routeService.delete(routeId);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Deletes route for user.
+     *
+     * @param userId user id
+     * @param routeId route id
+     * @return no content
+     */
+    @DeleteMapping("/users/{userId}/{routeId}")
+    @PreAuthorize("@userAccessGuard.canAccessUserById(#userId, authentication)")
+    public ResponseEntity<Void> deleteForUser(
+            final @PathVariable java.util.UUID userId,
+            final @PathVariable java.util.UUID routeId
+    ) {
+        log.info("Delete route [{}] for user [{}]", routeId, userId);
+        routeService.deleteForUser(userId, routeId);
         return ResponseEntity.noContent().build();
     }
 }

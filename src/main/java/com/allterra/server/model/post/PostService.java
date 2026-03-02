@@ -134,7 +134,12 @@ public class PostService {
     public void deletePost(final java.util.UUID userId, final java.util.UUID postId) {
         final var post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException(String.format("Post with id %s not found", postId)));
-        userRepository.findById(userId).ifPresent(user -> user.getPosts().remove(post));
+        final var postUserId = post.getUser() == null ? null : post.getUser().getId();
+        if (postUserId == null || !postUserId.equals(userId)) {
+            throw new ResourceNotFoundException(
+                    String.format("Post with id %s not found for user %s", postId, userId)
+            );
+        }
         postRepository.delete(post);
     }
 

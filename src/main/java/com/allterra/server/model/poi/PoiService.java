@@ -140,6 +140,34 @@ public class PoiService {
      * @param poiId id of poi for delete
      */
     public void deletePoi(final java.util.UUID poiId) {
-        poiRepository.deleteById(poiId);
+        final var poi = poiRepository.findById(poiId)
+                .orElseThrow(() -> new ResourceNotFoundException(String.format("Poi with id %s not found", poiId)));
+        poiRepository.delete(poi);
+    }
+
+    /**
+     * Deletes poi for user by id.
+     *
+     * @param userId user id
+     * @param poiId poi id
+     */
+    public void deletePoiForUser(final java.util.UUID userId, final java.util.UUID poiId) {
+        final var user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException(String.format("User with id %s not found", userId)));
+        final var poi = poiRepository.findById(poiId)
+                .orElseThrow(() -> new ResourceNotFoundException(String.format("Poi with id %s not found", poiId)));
+
+        if (user.getPois() == null || user.getPois().stream().noneMatch(item -> item.getId().equals(poiId))) {
+            throw new ResourceNotFoundException(
+                    String.format("Poi with id %s not found for user %s", poiId, userId)
+            );
+        }
+
+        user.getPois().removeIf(item -> item.getId().equals(poiId));
+        userRepository.save(user);
+
+        if (!poiRepository.existsByIdAndUsers_IdNot(poiId, userId)) {
+            poiRepository.delete(poi);
+        }
     }
 }

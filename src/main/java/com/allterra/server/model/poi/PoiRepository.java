@@ -8,4 +8,7 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface PoiRepository extends JpaRepository<Poi, java.util.UUID> {
+    boolean existsByIdAndUsers_EmailIgnoreCase(java.util.UUID id, String email);
+
+    boolean existsByIdAndUsers_IdNot(java.util.UUID id, java.util.UUID userId);
 }

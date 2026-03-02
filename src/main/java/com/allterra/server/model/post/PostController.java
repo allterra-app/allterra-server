@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -148,6 +149,7 @@ public class PostController {
      * @return {@link ResponseEntity} for deleting operation
      */
     @DeleteMapping("/users/{userId}/{postId}")
+    @PreAuthorize("@userAccessGuard.canAccessUserById(#userId, authentication)")
     public ResponseEntity<Void> deletePost(
             final @PathVariable java.util.UUID userId,
             @PathVariable final java.util.UUID postId
@@ -169,6 +171,7 @@ public class PostController {
      * @return {@link ResponseEntity} for deleting operation
      */
     @DeleteMapping("/{postId}")
+    @PreAuthorize("@postAccessGuard.canAccessPostById(#postId, authentication)")
     public ResponseEntity<Void> deletePost(@PathVariable final java.util.UUID postId) {
         log.info("Delete post id {}", postId);
         postService.deletePost(postId);

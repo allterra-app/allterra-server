@@ -19,6 +19,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -100,17 +101,34 @@ class PostServiceTest {
     }
 
     @Test
-    void deletePostShouldRemoveFromUserAndDelete() {
-        var post = Post.builder().id(com.allterra.server.TestUuids.id(5)).build();
-        var user = User.builder().posts(new ArrayList<>(List.of(post))).build();
+    void deletePostShouldDeleteWhenOwnedByUser() {
+        var userId = com.allterra.server.TestUuids.id(1);
+        var post = Post.builder()
+                .id(com.allterra.server.TestUuids.id(5))
+                .user(User.builder().id(userId).build())
+                .build();
 
         when(postRepository.findById(com.allterra.server.TestUuids.id(5))).thenReturn(Optional.of(post));
-        when(userRepository.findById(com.allterra.server.TestUuids.id(1))).thenReturn(Optional.of(user));
 
-        postService.deletePost(com.allterra.server.TestUuids.id(1), com.allterra.server.TestUuids.id(5));
+        postService.deletePost(userId, com.allterra.server.TestUuids.id(5));
 
-        assertThat(user.getPosts()).doesNotContain(post);
         verify(postRepository).delete(post);
+    }
+
+    @Test
+    void deletePostShouldThrowWhenPostIsNotOwnedByUser() {
+        var ownerId = com.allterra.server.TestUuids.id(2);
+        var post = Post.builder()
+                .id(com.allterra.server.TestUuids.id(5))
+                .user(User.builder().id(ownerId).build())
+                .build();
+
+        when(postRepository.findById(com.allterra.server.TestUuids.id(5))).thenReturn(Optional.of(post));
+
+        assertThatThrownBy(() -> postService.deletePost(com.allterra.server.TestUuids.id(1), com.allterra.server.TestUuids.id(5)))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Post with id " + com.allterra.server.TestUuids.id(5) + " not found for user");
+        verify(postRepository, never()).delete(post);
     }
 
     @Test

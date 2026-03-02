@@ -22,4 +22,6 @@ public interface RouteRepository extends JpaRepository<Route, java.util.UUID> {
 
     @EntityGraph(attributePaths = "user")
     List<Route> findAllByUser_IdOrderByCreatedAtDesc(java.util.UUID userId);
+
+    boolean existsByIdAndUser_EmailIgnoreCase(java.util.UUID id, String email);
 }
