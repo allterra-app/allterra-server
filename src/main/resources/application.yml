@@ -81,4 +81,11 @@ security:
 
 allterra:
   media:
+    storage-type: ${MEDIA_STORAGE_TYPE:local}
     local-storage-path: ${MEDIA_STORAGE_PATH:/tmp/allterra-media}
+    s3:
+      bucket: ${MEDIA_S3_BUCKET:}
+      region: ${MEDIA_S3_REGION:}
+      endpoint: ${MEDIA_S3_ENDPOINT:}
+      key-prefix: ${MEDIA_S3_KEY_PREFIX:media}
+      path-style-access: ${MEDIA_S3_PATH_STYLE_ACCESS:false}

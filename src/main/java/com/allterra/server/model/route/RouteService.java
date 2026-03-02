@@ -7,6 +7,7 @@ import com.allterra.server.model.route.dto.request.RouteUpdateRequestDto;
 import com.allterra.server.model.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -59,6 +60,7 @@ public class RouteService {
      * @param id route id
      * @return route response
      */
+    @Transactional(readOnly = true)
     public RouteResponseDto get(final java.util.UUID id) {
         return routeRepository.findById(id)
                 .map(routeMapper::toDto)
@@ -70,6 +72,7 @@ public class RouteService {
      *
      * @return route responses
      */
+    @Transactional(readOnly = true)
     public List<RouteResponseDto> getAll() {
         return routeRepository.findAll().stream().map(routeMapper::toDto).toList();
     }
@@ -80,6 +83,7 @@ public class RouteService {
      * @param userId user id
      * @return route responses
      */
+    @Transactional(readOnly = true)
     public List<RouteResponseDto> getAllForUser(final java.util.UUID userId) {
         return routeRepository.findAllByUser_IdOrderByCreatedAtDesc(userId).stream().map(routeMapper::toDto).toList();
     }

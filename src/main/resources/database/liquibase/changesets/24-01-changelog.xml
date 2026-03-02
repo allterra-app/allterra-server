@@ -267,4 +267,8 @@
         <dropTable tableName="media_files"/>
     </changeSet>
 
+    <changeSet id="1758742481194-32" author="andrey-shipulya">
+        <modifyDataType tableName="routes" columnName="gpx_content" newDataType="TEXT"/>
+    </changeSet>
+
 </databaseChangeLog>
