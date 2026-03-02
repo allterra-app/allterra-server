@@ -1,10 +1,8 @@
 package com.allterra.server.model.poi.dto.request;
 
 import com.allterra.server.model.poi.Poi;
-import com.allterra.server.model.user.User;
-import com.allterra.server.photo.model.PoiPhoto;
+import com.allterra.server.model.poi.PoiType;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,8 +17,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PoiCreateRequestDto {
 
-    @NotNull
-    private User user;
+    private java.util.UUID userId;
 
     @NotBlank
     private String name;
@@ -33,5 +30,5 @@ public class PoiCreateRequestDto {
 
     private String url;
 
-    private PoiPhoto poiPhoto;
+    private PoiType type;
 }

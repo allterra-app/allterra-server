@@ -34,7 +34,9 @@ public class AuthController {
      * @return {@link ResponseEntity for register user}
      */
     @PostMapping("/register")
-    public ResponseEntity<JwtAuthenticationResponseDto> registerUser(final @RequestBody JwtAuthenticationRequestDto request) {
+    public ResponseEntity<JwtAuthenticationResponseDto> registerUser(
+            final @RequestBody @Valid JwtAuthenticationRequestDto request
+    ) {
         return ResponseEntity.ok(authService.registerUser(request));
     }
 
@@ -46,7 +48,9 @@ public class AuthController {
      * @return {@link ResponseEntity} for authenticated user
      */
     @PostMapping("/login")
-    public ResponseEntity<JwtAuthenticationResponseDto> authenticateUser(final @RequestBody JwtAuthenticationRequestDto request) {
+    public ResponseEntity<JwtAuthenticationResponseDto> authenticateUser(
+            final @RequestBody @Valid JwtAuthenticationRequestDto request
+    ) {
         return ResponseEntity.ok(authService.authenticateUser(request));
     }
 

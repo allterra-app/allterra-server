@@ -1,6 +1,7 @@
 package com.allterra.server.model.poi.dto.request;
 
 import com.allterra.server.model.poi.Poi;
+import com.allterra.server.model.poi.PoiType;
 import com.allterra.server.model.user.User;
 import com.allterra.server.photo.model.PoiPhoto;
 import jakarta.validation.constraints.NotNull;
@@ -36,5 +37,7 @@ public class PoiUpdateRequestDto {
 
     private String url;
 
-    private PoiPhoto poiPhoto;
+    private PoiType type;
+
+    private List<PoiPhoto> photos;
 }

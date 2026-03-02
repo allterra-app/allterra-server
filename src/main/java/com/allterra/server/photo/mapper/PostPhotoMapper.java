@@ -15,10 +15,12 @@ import org.mapstruct.MappingTarget;
 public interface PostPhotoMapper extends
         PhotoMapper<PostPhoto, PostPhotoResponseDto, PostPhotoCreateRequestDto, PostPhotoUpdateRequestDto> {
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "post", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "modifiedAt", ignore = true)
     PostPhoto toEntity(final PostPhotoCreateRequestDto createRequestDto);
 
+    @Mapping(target = "postId", source = "post.id")
     PostPhotoResponseDto toDto(final PostPhoto entity);
 
     @Mapping(target = "createdAt", ignore = true)

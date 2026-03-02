@@ -56,13 +56,20 @@ logging:
   config: classpath:log4j2.xml
 
 security:
+  require-https: ${SECURITY_REQUIRE_HTTPS:true}
+  rate-limit:
+    login:
+      max-attempts: ${SECURITY_LOGIN_RATE_LIMIT_MAX_ATTEMPTS:10}
+      window-seconds: ${SECURITY_LOGIN_RATE_LIMIT_WINDOW_SECONDS:60}
   jwt:
     # Base64 encoded 64+ byte secret for HS512
     secret: ${JWT_SECRET}
     # Previous key for key rotation (optional)
     previous-secret: ${JWT_PREVIOUS_SECRET:}
     current-key-id: ${JWT_CURRENT_KEY_ID:current}
-    expiration-ms: ${JWT_EXPIRATION_MS:3600000}
+    # Access token should be short-lived for mobile API.
+    expiration-ms: ${JWT_EXPIRATION_MS:900000}
+    # Refresh token should be long-lived and rotatable.
     refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:2592000000}
     issuer: ${JWT_ISSUER:allterra-server}
     audience: ${JWT_AUDIENCE:allterra-client}
@@ -71,3 +78,7 @@ security:
     enabled: ${SEED_ADMIN_ENABLED:false}
     email: ${SEED_ADMIN_EMAIL:admin@allterra.local}
     password: ${SEED_ADMIN_PASSWORD:}
+
+allterra:
+  media:
+    local-storage-path: ${MEDIA_STORAGE_PATH:/tmp/allterra-media}

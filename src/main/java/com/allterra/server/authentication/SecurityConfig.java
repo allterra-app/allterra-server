@@ -3,6 +3,9 @@ package com.allterra.server.authentication;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -17,21 +20,33 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.web.filter.ForwardedHeaderFilter;
 
 /**
  * Authentication configuration.
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class SecurityConfig {
+public final class SecurityConfig {
+    private static final String AUTH_LOGIN_PATH = "/auth/login";
+    private static final String AUTH_REGISTER_PATH = "/auth/register";
+    private static final String AUTH_REFRESH_PATH = "/auth/refresh";
 
     JwtTokenProvider jwtTokenProvider;
 
     CustomAccessDeniedHandler customAccessDeniedHandler;
     CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    LoginRateLimitFilter loginRateLimitFilter;
+
+    @NonFinal
+    @Value("${security.require-https:true}")
+    boolean requireHttps;
 
     /**
      * Configures the security filter chain for HTTP requests.
@@ -47,22 +62,83 @@ public class SecurityConfig {
      * @throws Exception if an error occurs while configuring the security filter chain
      */
     @Bean
-    public SecurityFilterChain securityFilterChain(final HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            final HttpSecurity http,
+            final JwtTokenFilter jwtTokenFilter
+    ) throws Exception {
+        if (requireHttps) {
+            http.requiresChannel(channel -> channel.anyRequest().requiresSecure());
+        }
+
         http.exceptionHandling(exception -> exception
                         .accessDeniedHandler(customAccessDeniedHandler)
                         .authenticationEntryPoint(customAuthenticationEntryPoint))
+                // CSRF is safe to disable here because API is stateless JWT-based and does not use cookie auth.
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, AUTH_LOGIN_PATH).permitAll()
+                        .requestMatchers(HttpMethod.POST, AUTH_REGISTER_PATH).permitAll()
+                        .requestMatchers(HttpMethod.POST, AUTH_REFRESH_PATH).permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/users").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/users/*/roles").hasRole("ADMIN")
                         .anyRequest().hasAnyRole("USER", "ADMIN")
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(new JwtTokenFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(loginRateLimitFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    /**
+     * Builds matcher for endpoints that must stay publicly accessible without JWT.
+     *
+     * @return matcher for public authentication routes
+     */
+    @Bean
+    public RequestMatcher publicEndpointsMatcher() {
+        return new OrRequestMatcher(
+                new AntPathRequestMatcher(AUTH_LOGIN_PATH, HttpMethod.POST.name()),
+                new AntPathRequestMatcher(AUTH_REGISTER_PATH, HttpMethod.POST.name()),
+                new AntPathRequestMatcher(AUTH_REFRESH_PATH, HttpMethod.POST.name())
+        );
+    }
+
+    /**
+     * Creates JWT authentication filter configured with explicit public endpoint matcher.
+     *
+     * @param publicEndpointsMatcher matcher for endpoints that must bypass JWT filter
+     * @return configured JWT token filter
+     */
+    @Bean
+    public JwtTokenFilter jwtTokenFilter(final RequestMatcher publicEndpointsMatcher) {
+        return new JwtTokenFilter(jwtTokenProvider, publicEndpointsMatcher);
+    }
+
+    /**
+     * Enables processing of reverse-proxy forwarded headers (proto/host) for secure channel enforcement.
+     *
+     * @return forwarded header filter
+     */
+    @Bean
+    public ForwardedHeaderFilter forwardedHeaderFilter() {
+        return new ForwardedHeaderFilter();
+    }
+
+    /**
+     * Registers {@link ForwardedHeaderFilter} with high priority so channel security sees forwarded scheme.
+     *
+     * @param forwardedHeaderFilter forwarded header filter bean
+     * @return forwarded header filter registration bean
+     */
+    @Bean
+    public FilterRegistrationBean<ForwardedHeaderFilter> forwardedHeaderFilterRegistration(
+            final ForwardedHeaderFilter forwardedHeaderFilter
+    ) {
+        var registration = new FilterRegistrationBean<>(forwardedHeaderFilter);
+        registration.setOrder(0);
+        return registration;
     }
 
     /**

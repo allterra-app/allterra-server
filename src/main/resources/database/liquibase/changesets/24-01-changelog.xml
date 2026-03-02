@@ -206,4 +206,65 @@
         </createIndex>
     </changeSet>
 
+    <changeSet id="1758742481194-25" author="andrey-shipulya">
+        <dropUniqueConstraint tableName="poi_photos" constraintName="uc_poi_photos_poi"/>
+    </changeSet>
+
+    <changeSet id="1758742481194-26" author="andrey-shipulya">
+        <addColumn tableName="poi">
+            <column name="type" type="VARCHAR(50)" defaultValue="OTHER"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="1758742481194-27" author="andrey-shipulya">
+        <createTable tableName="routes">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_routes"/>
+            </column>
+            <column name="user_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(255)"/>
+            <column name="description" type="VARCHAR(1024)"/>
+            <column name="gpx_content" type="CLOB"/>
+            <column name="distance_km" type="DOUBLE"/>
+            <column name="duration_minutes" type="BIGINT"/>
+            <column name="point_count" type="INT"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="modified_at" type="DATETIME"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1758742481194-28" author="andrey-shipulya">
+        <addForeignKeyConstraint baseTableName="routes" baseColumnNames="user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_routes_on_user"/>
+    </changeSet>
+
+    <changeSet id="1758742481194-29" author="andrey-shipulya">
+        <createTable tableName="media_files">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_media_files"/>
+            </column>
+            <column name="file_name" type="VARCHAR(255)"/>
+            <column name="content_type" type="VARCHAR(255)"/>
+            <column name="file_size" type="BIGINT"/>
+            <column name="content" type="BLOB"/>
+            <column name="created_at" type="DATETIME"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1758742481194-30" author="andrey-shipulya">
+        <createIndex tableName="routes" indexName="idx_routes_user_id">
+            <column name="user_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="1758742481194-31" author="andrey-shipulya">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="media_files"/>
+        </preConditions>
+        <dropTable tableName="media_files"/>
+    </changeSet>
+
 </databaseChangeLog>

@@ -5,6 +5,15 @@ import com.allterra.server.authentication.dto.JwtAuthenticationRequestDto;
 import com.allterra.server.authentication.exception.InvalidCredentialsException;
 import com.allterra.server.authentication.service.AuthService;
 import com.allterra.server.exception.ResourceNotFoundException;
+import com.allterra.server.model.poi.PoiService;
+import com.allterra.server.model.poi.dto.PoiResponseDto;
+import com.allterra.server.model.poi.dto.request.PoiCreateRequestDto;
+import com.allterra.server.model.post.PostService;
+import com.allterra.server.model.post.dto.PostResponseDto;
+import com.allterra.server.model.post.dto.request.PostCreateRequestDto;
+import com.allterra.server.model.route.RouteService;
+import com.allterra.server.model.route.dto.RouteResponseDto;
+import com.allterra.server.model.route.dto.request.RouteCreateRequestDto;
 import com.allterra.server.model.user.UserRole;
 import com.allterra.server.photo.service.UserPhotoService;
 import org.junit.jupiter.api.Test;
@@ -39,6 +48,15 @@ class ApiContractIntegrationTest {
 
     @MockBean
     private UserPhotoService userPhotoService;
+
+    @MockBean
+    private RouteService routeService;
+
+    @MockBean
+    private PoiService poiService;
+
+    @MockBean
+    private PostService postService;
 
     @Test
     void loginShouldReturn401AndErrorPayloadWhenCredentialsAreInvalid() throws Exception {
@@ -152,6 +170,87 @@ class ApiContractIntegrationTest {
                 .andExpect(jsonPath("$.path").value("/user-photos"))
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.validationErrors").isMap());
+    }
+
+    @Test
+    void routeCreateForUserShouldAcceptJsonWithCharset() throws Exception {
+        mockJwt("user-token", Set.of(UserRole.USER));
+        var userId = com.allterra.server.TestUuids.id(20);
+        var response = RouteResponseDto.builder()
+                .id(com.allterra.server.TestUuids.id(21))
+                .title("Route")
+                .gpxContent("<gpx/>")
+                .build();
+        when(routeService.createForUser(org.mockito.ArgumentMatchers.eq(userId), any(RouteCreateRequestDto.class)))
+                .thenReturn(response);
+
+        mockMvc.perform(post("/routes/users/{userId}", userId)
+                        .header("Authorization", "Bearer user-token")
+                        .contentType(MediaType.parseMediaType("application/json;charset=UTF-8"))
+                        .content("""
+                                {
+                                  "title": "Route",
+                                  "description": "Desc",
+                                  "gpxContent": "<gpx><trk><trkseg><trkpt lat=\\"1\\" lon=\\"1\\"/></trkseg></trk></gpx>",
+                                  "distanceKm": 3.1,
+                                  "durationMinutes": 10,
+                                  "pointCount": 2
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Route"));
+    }
+
+    @Test
+    void poiCreateForUserShouldAcceptJsonWithCharset() throws Exception {
+        mockJwt("user-token", Set.of(UserRole.USER));
+        var userId = com.allterra.server.TestUuids.id(30);
+        var response = PoiResponseDto.builder()
+                .id(com.allterra.server.TestUuids.id(31))
+                .name("Cafe")
+                .build();
+        when(poiService.createPoiForUser(org.mockito.ArgumentMatchers.eq(userId), any(PoiCreateRequestDto.class)))
+                .thenReturn(response);
+
+        mockMvc.perform(post("/pois/users/{userId}", userId)
+                        .header("Authorization", "Bearer user-token")
+                        .contentType(MediaType.parseMediaType("application/json;charset=UTF-8"))
+                        .content("""
+                                {
+                                  "name": "Cafe",
+                                  "description": "desc",
+                                  "type": "SHOP",
+                                  "actual": true,
+                                  "rating": 0
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Cafe"));
+    }
+
+    @Test
+    void postCreateForUserShouldAcceptJsonWithCharset() throws Exception {
+        mockJwt("user-token", Set.of(UserRole.USER));
+        var userId = com.allterra.server.TestUuids.id(40);
+        var response = PostResponseDto.builder()
+                .id(com.allterra.server.TestUuids.id(41))
+                .title("Morning ride")
+                .body("Short description")
+                .build();
+        when(postService.createPostForUser(org.mockito.ArgumentMatchers.eq(userId), any(PostCreateRequestDto.class)))
+                .thenReturn(response);
+
+        mockMvc.perform(post("/posts/users/{userId}", userId)
+                        .header("Authorization", "Bearer user-token")
+                        .contentType(MediaType.parseMediaType("application/json;charset=UTF-8"))
+                        .content("""
+                                {
+                                  "title": "Morning ride",
+                                  "body": "Short description"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Morning ride"));
     }
 
     private void mockJwt(final String token, final Set<UserRole> roles) {

@@ -1,8 +1,8 @@
 package com.allterra.server.model.poi.dto;
 
-import com.allterra.server.model.user.User;
-import com.allterra.server.photo.model.PoiPhoto;
 import com.allterra.server.model.poi.Poi;
+import com.allterra.server.model.poi.PoiType;
+import com.allterra.server.photo.dto.PoiPhotoResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,7 +26,7 @@ public class PoiResponseDto {
 
     private String description;
 
-    private List<User> users;
+    private List<java.util.UUID> userIds;
 
     private int rating;
 
@@ -34,7 +34,9 @@ public class PoiResponseDto {
 
     private String url;
 
-    private PoiPhoto poiPhoto;
+    private PoiType type;
+
+    private List<PoiPhotoResponseDto> photos;
 
     private LocalDateTime createdAt;
 

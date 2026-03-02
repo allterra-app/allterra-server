@@ -29,6 +29,12 @@ public class PostService {
      */
     public PostResponseDto createPost(final PostCreateRequestDto createdPost) {
         final var postEntity = postMapper.toEntity(createdPost);
+        final var userId = createdPost.getUserId();
+        if (userId != null) {
+            final var user = userRepository.findById(userId)
+                    .orElseThrow(() -> new ResourceNotFoundException(String.format("User with id %s not found", userId)));
+            attachPostToUser(postEntity, user);
+        }
         return postMapper.toDto(postRepository.save(postEntity));
     }
 
@@ -41,8 +47,17 @@ public class PostService {
      */
     public PostResponseDto createPostForUser(final java.util.UUID userId, final PostCreateRequestDto createdPost) {
         final var postEntity = postMapper.toEntity(createdPost);
-        userRepository.findById(userId).ifPresent(user -> user.getPosts().add(postEntity));
+        final var user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException(String.format("User with id %s not found", userId)));
+        attachPostToUser(postEntity, user);
         return postMapper.toDto(postRepository.save(postEntity));
+    }
+
+    private void attachPostToUser(final Post post, final com.allterra.server.model.user.User user) {
+        post.setUser(user);
+        if (user.getPosts() != null && !user.getPosts().contains(post)) {
+            user.getPosts().add(post);
+        }
     }
 
     /**

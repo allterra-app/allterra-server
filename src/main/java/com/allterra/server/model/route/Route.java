@@ -1,20 +1,16 @@
-package com.allterra.server.model.poi;
+package com.allterra.server.model.route;
 
 import com.allterra.server.model.user.User;
-import com.allterra.server.photo.model.PoiPhoto;
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,10 +21,9 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
- * Poi model. This model describe a point of interest on routes.
+ * Route model.
  */
 @Data
 @Builder
@@ -36,33 +31,30 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
-@Table(name = "poi")
-public class Poi {
+@Table(name = "routes")
+public class Route {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private java.util.UUID id;
 
-    private String name;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference
+    private User user;
+
+    private String title;
 
     private String description;
 
-    @ManyToMany(mappedBy = "pois")
-    @JsonBackReference
-    private List<User> users;
+    @Lob
+    private String gpxContent;
 
-    private int rating;
+    private Double distanceKm;
 
-    private boolean actual;
+    private Long durationMinutes;
 
-    private String url;
-
-    @Enumerated(EnumType.STRING)
-    private PoiType type;
-
-    @OneToMany(mappedBy = "poi", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    @JsonManagedReference
-    private List<PoiPhoto> photos;
+    private Integer pointCount;
 
     @CreatedDate
     private LocalDateTime createdAt;

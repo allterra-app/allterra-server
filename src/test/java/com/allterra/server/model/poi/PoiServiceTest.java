@@ -37,34 +37,43 @@ class PoiServiceTest {
 
     @Test
     void createPoiShouldMapAndSave() {
-        var request = PoiCreateRequestDto.builder().name("poi").build();
+        var request = PoiCreateRequestDto.builder()
+                .userId(com.allterra.server.TestUuids.id(9))
+                .name("poi")
+                .build();
         var entity = Poi.builder().name("poi").build();
         var saved = Poi.builder().id(com.allterra.server.TestUuids.id(1)).name("poi").build();
+        var user = User.builder().pois(new ArrayList<>()).build();
         var response = PoiResponseDto.builder().id(com.allterra.server.TestUuids.id(1)).name("poi").build();
 
         when(poiMapper.toEntity(request)).thenReturn(entity);
         when(poiRepository.save(entity)).thenReturn(saved);
+        when(userRepository.findById(com.allterra.server.TestUuids.id(9))).thenReturn(Optional.of(user));
+        when(userRepository.save(user)).thenReturn(user);
         when(poiMapper.toDto(saved)).thenReturn(response);
 
         assertThat(poiService.createPoi(request)).isEqualTo(response);
+        assertThat(user.getPois()).contains(saved);
     }
 
     @Test
     void createPoiForUserShouldAddPoiToUser() {
         var request = PoiCreateRequestDto.builder().name("poi").build();
         var entity = Poi.builder().name("poi").build();
+        var saved = Poi.builder().id(com.allterra.server.TestUuids.id(10)).name("poi").build();
         var user = User.builder().pois(new ArrayList<>()).build();
         var response = PoiResponseDto.builder().id(com.allterra.server.TestUuids.id(1)).name("poi").build();
 
         when(poiMapper.toEntity(request)).thenReturn(entity);
+        when(poiRepository.save(entity)).thenReturn(saved);
         when(userRepository.findById(com.allterra.server.TestUuids.id(5))).thenReturn(Optional.of(user));
-        when(poiRepository.save(entity)).thenReturn(entity);
-        when(poiMapper.toDto(entity)).thenReturn(response);
+        when(userRepository.save(user)).thenReturn(user);
+        when(poiMapper.toDto(saved)).thenReturn(response);
 
         var result = poiService.createPoiForUser(com.allterra.server.TestUuids.id(5), request);
 
         assertThat(result).isEqualTo(response);
-        assertThat(user.getPois()).contains(entity);
+        assertThat(user.getPois()).contains(saved);
     }
 
     @Test

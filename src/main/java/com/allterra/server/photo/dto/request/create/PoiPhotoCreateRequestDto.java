@@ -1,6 +1,5 @@
 package com.allterra.server.photo.dto.request.create;
 
-import com.allterra.server.model.poi.Poi;
 import com.allterra.server.photo.model.PoiPhoto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,5 +16,5 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class PoiPhotoCreateRequestDto extends PhotoCreateRequestDto {
-    private Poi poi;
+    private java.util.UUID poiId;
 }

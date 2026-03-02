@@ -1,6 +1,5 @@
 package com.allterra.server.photo.dto;
 
-import com.allterra.server.model.post.Post;
 import com.allterra.server.photo.model.PostPhoto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,5 +16,5 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class PostPhotoResponseDto extends PhotoResponseDto {
-    private Post post;
+    private java.util.UUID postId;
 }

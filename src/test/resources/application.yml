@@ -21,5 +21,10 @@ server:
     context-path: /api/v1
 
 security:
+  require-https: false
+  rate-limit:
+    login:
+      max-attempts: 1000
+      window-seconds: 60
   jwt:
     secret: AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ==

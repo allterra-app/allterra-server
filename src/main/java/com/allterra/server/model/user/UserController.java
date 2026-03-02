@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -58,6 +59,20 @@ public class UserController {
         log.info("Get user by id {} requested.", id);
         var userResponseDto = userService.getById(id);
 
+        return nonNull(userResponseDto) ? ResponseEntity.ok(userResponseDto) : ResponseEntity.notFound().build();
+    }
+
+    /**
+     * Returns current authenticated user.
+     *
+     * @param authentication authentication context
+     * @return current user
+     */
+    @GetMapping("/me")
+    public ResponseEntity<UserResponseDto> getCurrentUser(final Authentication authentication) {
+        var email = authentication == null ? null : authentication.getName();
+        log.info("Get current user requested for email {}.", email);
+        var userResponseDto = userService.getByEmail(email);
         return nonNull(userResponseDto) ? ResponseEntity.ok(userResponseDto) : ResponseEntity.notFound().build();
     }
 

@@ -1,10 +1,13 @@
 package com.allterra.server.authentication;
 
 import com.allterra.server.model.user.UserRole;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -20,6 +23,8 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -31,7 +36,12 @@ import java.util.stream.Collectors;
 public class JwtTokenProvider {
 
     private static final int HS512_MIN_KEY_LENGTH_BYTES = 64;
+    private static final String TOKEN_TYPE_CLAIM = "token_type";
+    private static final String ACCESS_TOKEN_TYPE = "access";
     private static final String ROLES_CLAIM = "roles";
+    private static final String ALGORITHM_HEADER = "alg";
+    private static final String DISALLOWED_NONE_ALGORITHM = "none";
+    private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<>() { };
 
     private final Key signInKey;
     private final Key previousSignInKey;
@@ -40,11 +50,12 @@ public class JwtTokenProvider {
     private final String audience;
     private final long clockSkewSeconds;
     private final String currentKeyId;
+    private final ObjectMapper objectMapper;
 
     public JwtTokenProvider(
             @Value("${security.jwt.secret}") final String jwtSecret,
             @Value("${security.jwt.previous-secret:}") final String previousJwtSecret,
-            @Value("${security.jwt.expiration-ms:3600000}") final long jwtExpirationMs,
+            @Value("${security.jwt.expiration-ms:900000}") final long jwtExpirationMs,
             @Value("${security.jwt.issuer:allterra-server}") final String issuer,
             @Value("${security.jwt.audience:allterra-client}") final String audience,
             @Value("${security.jwt.clock-skew-seconds:30}") final long clockSkewSeconds,
@@ -57,6 +68,7 @@ public class JwtTokenProvider {
         this.audience = audience;
         this.clockSkewSeconds = clockSkewSeconds;
         this.currentKeyId = currentKeyId;
+        this.objectMapper = new ObjectMapper();
     }
 
     @PostConstruct
@@ -102,8 +114,9 @@ public class JwtTokenProvider {
                 .setAudience(audience)
                 .setIssuedAt(issuedAt)
                 .setExpiration(expiryDate)
+                .claim(TOKEN_TYPE_CLAIM, ACCESS_TOKEN_TYPE)
                 .claim(ROLES_CLAIM, safeRoles.stream().map(Enum::name).toList())
-                .signWith(signInKey)
+                .signWith(signInKey, SignatureAlgorithm.HS512)
                 .compact();
     }
 
@@ -161,13 +174,17 @@ public class JwtTokenProvider {
         } catch (SecurityException ex) {
             log.warn("JWT signature validation failed");
             return ValidateTokenStatus.INVALID_SIGNATURE;
-        } catch (MalformedJwtException | UnsupportedJwtException | IllegalArgumentException ex) {
+        } catch (UnsupportedJwtException ex) {
+            log.warn("JWT algorithm is unsupported");
+            return ValidateTokenStatus.UNSUPPORTED_ALGORITHM;
+        } catch (MalformedJwtException | IllegalArgumentException ex) {
             log.warn("JWT is malformed or unsupported");
             return ValidateTokenStatus.INVALID;
         }
     }
 
     private Claims parseClaims(final String token) {
+        validateTokenHeader(token);
         try {
             return parseClaimsWithKey(token, signInKey);
         } catch (SecurityException ex) {
@@ -179,14 +196,53 @@ public class JwtTokenProvider {
     }
 
     private Claims parseClaimsWithKey(final String token, final Key key) {
-        return Jwts.parserBuilder()
+        var parserBuilder = Jwts.parserBuilder()
             .setSigningKey(key)
-            .requireIssuer(issuer)
-            .requireAudience(audience)
             .setAllowedClockSkewSeconds(clockSkewSeconds)
+            .require(TOKEN_TYPE_CLAIM, ACCESS_TOKEN_TYPE);
+
+        if (issuer != null && !issuer.isBlank()) {
+            parserBuilder.requireIssuer(issuer);
+        }
+        if (audience != null && !audience.isBlank()) {
+            parserBuilder.requireAudience(audience);
+        }
+
+        var parsedClaims = parserBuilder
             .build()
             .parseClaimsJws(token)
             .getBody();
+        return parsedClaims;
+    }
+
+    private void validateTokenHeader(final String token) {
+        final var algorithm = extractTokenAlgorithm(token);
+        if (algorithm == null || algorithm.isBlank()) {
+            throw new UnsupportedJwtException("JWT algorithm header is missing");
+        }
+        if (DISALLOWED_NONE_ALGORITHM.equalsIgnoreCase(algorithm)) {
+            throw new UnsupportedJwtException("JWT with 'alg=none' is not allowed");
+        }
+        if (!SignatureAlgorithm.HS512.getValue().equalsIgnoreCase(algorithm)) {
+            throw new UnsupportedJwtException("Unsupported JWT algorithm: " + algorithm);
+        }
+    }
+
+    private String extractTokenAlgorithm(final String token) {
+        try {
+            final var dotIndex = token.indexOf('.');
+            if (dotIndex <= 0) {
+                throw new MalformedJwtException("JWT header segment is missing");
+            }
+            final var encodedHeader = token.substring(0, dotIndex);
+            final var decoded = Decoders.BASE64URL.decode(encodedHeader);
+            final var headerMap = objectMapper.readValue(decoded, MAP_TYPE_REFERENCE);
+            return Objects.toString(headerMap.get(ALGORITHM_HEADER), null);
+        } catch (IllegalArgumentException exception) {
+            throw new MalformedJwtException("JWT header is malformed", exception);
+        } catch (java.io.IOException exception) {
+            throw new MalformedJwtException("JWT header JSON is malformed", exception);
+        }
     }
 
     private Key parseSigningKey(final String jwtSecret) {
@@ -218,6 +274,7 @@ public class JwtTokenProvider {
         VALID(true),
         EXPIRED(false),
         INVALID_SIGNATURE(false),
+        UNSUPPORTED_ALGORITHM(false),
         INVALID(false);
 
         public final boolean isValid;

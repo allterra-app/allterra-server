@@ -55,6 +55,7 @@ class JwtTokenProviderTest {
                 .setAudience(AUDIENCE)
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(now.plusSeconds(300)))
+                .claim("token_type", "access")
                 .signWith(oldKey)
                 .compact();
 
@@ -74,6 +75,7 @@ class JwtTokenProviderTest {
                 .setAudience(AUDIENCE)
                 .setIssuedAt(Date.from(now.minusSeconds(120)))
                 .setExpiration(Date.from(now.minusSeconds(60)))
+                .claim("token_type", "access")
                 .signWith(key)
                 .compact();
 
@@ -93,6 +95,7 @@ class JwtTokenProviderTest {
                 .setAudience(AUDIENCE)
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(now.plusSeconds(300)))
+                .claim("token_type", "access")
                 .signWith(foreignKey)
                 .compact();
 
@@ -106,6 +109,21 @@ class JwtTokenProviderTest {
 
         assertThat(provider.validateToken("malformed.jwt.token"))
                 .isEqualTo(JwtTokenProvider.ValidateTokenStatus.INVALID);
+    }
+
+    @Test
+    void validateTokenShouldRejectNoneAlgorithm() {
+        var currentSecret = base64Secret((byte) 7);
+        var provider = new JwtTokenProvider(currentSecret, "", 3_600_000, ISSUER, AUDIENCE, 30, "key-v1");
+
+        var header = Base64.getUrlEncoder().withoutPadding()
+                .encodeToString("{\"alg\":\"none\",\"typ\":\"JWT\"}".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        var payload = Base64.getUrlEncoder().withoutPadding()
+                .encodeToString("{\"sub\":\"user@allterra.com\"}".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        var token = header + "." + payload + ".";
+
+        assertThat(provider.validateToken(token))
+                .isEqualTo(JwtTokenProvider.ValidateTokenStatus.UNSUPPORTED_ALGORITHM);
     }
 
     @Test

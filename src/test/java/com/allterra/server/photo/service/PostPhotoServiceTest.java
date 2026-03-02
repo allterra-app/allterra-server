@@ -1,6 +1,8 @@
 package com.allterra.server.photo.service;
 
 import com.allterra.server.exception.ResourceNotFoundException;
+import com.allterra.server.model.post.Post;
+import com.allterra.server.model.post.PostRepository;
 import com.allterra.server.photo.dto.PostPhotoResponseDto;
 import com.allterra.server.photo.dto.request.create.PostPhotoCreateRequestDto;
 import com.allterra.server.photo.dto.request.update.PostPhotoUpdateRequestDto;
@@ -18,7 +20,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -29,17 +30,23 @@ class PostPhotoServiceTest {
     private PostPhotoRepository repository;
     @Mock
     private PostPhotoMapper mapper;
+    @Mock
+    private PostRepository postRepository;
 
     @InjectMocks
     private PostPhotoService service;
 
     @Test
     void createShouldMapSaveAndReturnDto() {
-        var request = PostPhotoCreateRequestDto.builder().url("/img.jpg").build();
+        var request = PostPhotoCreateRequestDto.builder()
+                .url("/img.jpg")
+                .postId(com.allterra.server.TestUuids.id(10))
+                .build();
         var entity = PostPhoto.builder().url("/img.jpg").build();
         var saved = PostPhoto.builder().id(com.allterra.server.TestUuids.id(1)).url("/img.jpg").build();
         var response = PostPhotoResponseDto.builder().id(com.allterra.server.TestUuids.id(1)).url("/img.jpg").build();
 
+        when(postRepository.findById(com.allterra.server.TestUuids.id(10))).thenReturn(Optional.of(Post.builder().id(com.allterra.server.TestUuids.id(10)).build()));
         when(mapper.toEntity(request)).thenReturn(entity);
         when(repository.save(entity)).thenReturn(saved);
         when(mapper.toDto(saved)).thenReturn(response);

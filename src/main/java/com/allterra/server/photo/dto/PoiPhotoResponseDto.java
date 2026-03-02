@@ -1,6 +1,5 @@
 package com.allterra.server.photo.dto;
 
-import com.allterra.server.model.poi.Poi;
 import com.allterra.server.photo.model.PoiPhoto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,5 +16,5 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class PoiPhotoResponseDto extends PhotoResponseDto {
-    private Poi poi;
+    private java.util.UUID poiId;
 }

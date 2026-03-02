@@ -30,8 +30,21 @@ public class PoiService {
      * @return {@link PoiResponseDto} for created Poi
      */
     public PoiResponseDto createPoi(final PoiCreateRequestDto requestDto) {
+        final var userId = requestDto.getUserId();
+        if (userId == null) {
+            throw new IllegalArgumentException("userId is required for poi creation");
+        }
+
         final var poiEntity = poiMapper.toEntity(requestDto);
-        return poiMapper.toDto(poiRepository.save(poiEntity));
+        final var savedPoi = poiRepository.save(poiEntity);
+        final var user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException(String.format("User with id %s not found", userId)));
+        if (user.getPois() == null) {
+            user.setPois(new java.util.ArrayList<>());
+        }
+        user.getPois().add(savedPoi);
+        userRepository.save(user);
+        return poiMapper.toDto(savedPoi);
     }
 
     /**
@@ -43,8 +56,15 @@ public class PoiService {
      */
     public PoiResponseDto createPoiForUser(final java.util.UUID userId, PoiCreateRequestDto requestDto) {
         final var poiEntity = poiMapper.toEntity(requestDto);
-        userRepository.findById(userId).ifPresent(user -> user.getPois().add(poiEntity));
-        return poiMapper.toDto(poiRepository.save(poiEntity));
+        final var savedPoi = poiRepository.save(poiEntity);
+        final var user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException(String.format("User with id %s not found", userId)));
+        if (user.getPois() == null) {
+            user.setPois(new java.util.ArrayList<>());
+        }
+        user.getPois().add(savedPoi);
+        userRepository.save(user);
+        return poiMapper.toDto(savedPoi);
     }
 
     /**

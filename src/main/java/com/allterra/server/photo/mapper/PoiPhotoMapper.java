@@ -14,10 +14,12 @@ import org.mapstruct.MappingTarget;
 @Mapper(componentModel = "spring")
 public interface PoiPhotoMapper extends PhotoMapper<PoiPhoto, PoiPhotoResponseDto, PoiPhotoCreateRequestDto, PoiPhotoUpdateRequestDto> {
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "poi", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "modifiedAt", ignore = true)
     PoiPhoto toEntity(final PoiPhotoCreateRequestDto createRequestDto);
 
+    @Mapping(target = "poiId", source = "poi.id")
     PoiPhotoResponseDto toDto(final PoiPhoto entity);
 
     @Mapping(target = "createdAt", ignore = true)

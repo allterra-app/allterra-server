@@ -1,34 +1,28 @@
-package com.allterra.server.model.post.dto;
+package com.allterra.server.model.route.dto;
 
-import com.allterra.server.photo.dto.PostPhotoResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
- * Post response DTO model.
+ * Route response dto.
  */
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PostResponseDto {
-
+public class RouteResponseDto {
     private java.util.UUID id;
-
-    private PostUserResponseDto user;
-
+    private java.util.UUID userId;
     private String title;
-
-    private String body;
-
-    private List<PostPhotoResponseDto> photos;
-
+    private String description;
+    private String gpxContent;
+    private Double distanceKm;
+    private Long durationMinutes;
+    private Integer pointCount;
     private LocalDateTime createdAt;
-
     private LocalDateTime modifiedAt;
 }

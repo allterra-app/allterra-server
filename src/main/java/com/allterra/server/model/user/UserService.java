@@ -51,6 +51,21 @@ public final class UserService {
     }
 
     /**
+     * Returns user by email.
+     *
+     * @param email user email
+     * @return {@link UserResponseDto} by email
+     */
+    public UserResponseDto getByEmail(final String email) {
+        if (email == null || email.isBlank()) {
+            return null;
+        }
+        return userRepository.findByEmailIgnoreCase(email)
+                .map(userMapper::toDto)
+                .orElse(null);
+    }
+
+    /**
      * Created user.
      *
      * @param userRequestDto {@link UserCreateRequestDto} for user

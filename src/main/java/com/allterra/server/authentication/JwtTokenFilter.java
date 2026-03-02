@@ -11,9 +11,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -32,6 +34,12 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     private static final int TOKEN_BEGIN_INDEX = 7;
 
     JwtTokenProvider jwtTokenProvider;
+    RequestMatcher publicEndpointsMatcher;
+
+    @Override
+    protected boolean shouldNotFilter(final @NonNull HttpServletRequest request) {
+        return "OPTIONS".equalsIgnoreCase(request.getMethod()) || publicEndpointsMatcher.matches(request);
+    }
 
     @Override
     protected void doFilterInternal(
@@ -39,26 +47,26 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             final @NonNull HttpServletResponse response,
             final @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
-        if (request.getServletPath().startsWith("/auth/")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         var token = resolveToken(request);
 
         if (StringUtils.isNotBlank(token)) {
             var validationStatus = jwtTokenProvider.validateToken(token);
             if (validationStatus.isValid) {
-                var username = jwtTokenProvider.getUserEmailFromToken(token);
-                var authorities = mapRolesToAuthorities(jwtTokenProvider.getUserRolesFromToken(token));
-                var authentication = new UsernamePasswordAuthenticationToken(username, null, authorities);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                setAuthentication(token);
             } else {
+                SecurityContextHolder.clearContext();
                 request.setAttribute("auth_error_message", mapAuthErrorMessage(validationStatus));
             }
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void setAuthentication(final String token) {
+        final var username = jwtTokenProvider.getUserEmailFromToken(token);
+        final var authorities = mapRolesToAuthorities(jwtTokenProvider.getUserRolesFromToken(token));
+        final Authentication authentication = new UsernamePasswordAuthenticationToken(username, null, authorities);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
     private String resolveToken(final HttpServletRequest request) {
@@ -80,6 +88,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         return switch (status) {
             case EXPIRED -> "Access token is expired.";
             case INVALID_SIGNATURE -> "Access token signature is invalid.";
+            case UNSUPPORTED_ALGORITHM -> "Access token algorithm is not supported.";
             case INVALID -> "Access token is invalid.";
             case VALID -> "Authentication token is valid.";
         };

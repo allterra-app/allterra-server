@@ -11,6 +11,8 @@ import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.never;
@@ -27,7 +29,12 @@ class JwtTokenFilterTest {
 
     @BeforeEach
     void setUp() {
-        jwtTokenFilter = new JwtTokenFilter(jwtTokenProvider);
+        var publicEndpointsMatcher = new OrRequestMatcher(
+                new AntPathRequestMatcher("/auth/login", "POST"),
+                new AntPathRequestMatcher("/auth/register", "POST"),
+                new AntPathRequestMatcher("/auth/refresh", "POST")
+        );
+        jwtTokenFilter = new JwtTokenFilter(jwtTokenProvider, publicEndpointsMatcher);
         SecurityContextHolder.clearContext();
     }
 
@@ -85,5 +92,18 @@ class JwtTokenFilterTest {
 
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
         verify(jwtTokenProvider, never()).validateToken(org.mockito.ArgumentMatchers.anyString());
+    }
+
+    @Test
+    void doFilterShouldSkipPublicAuthEndpoint() throws Exception {
+        var request = new MockHttpServletRequest("POST", "/auth/login");
+        request.setServletPath("/auth/login");
+        var response = new MockHttpServletResponse();
+        var filterChain = new MockFilterChain();
+
+        jwtTokenFilter.doFilter(request, response, filterChain);
+
+        verify(jwtTokenProvider, never()).validateToken(org.mockito.ArgumentMatchers.anyString());
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
     }
 }

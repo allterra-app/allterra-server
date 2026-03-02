@@ -1,9 +1,9 @@
 package com.allterra.server.photo.controller;
 
-import com.allterra.server.photo.dto.UserPhotoResponseDto;
-import com.allterra.server.photo.dto.request.create.UserPhotoCreateRequestDto;
-import com.allterra.server.photo.dto.request.update.UserPhotoUpdateRequestDto;
-import com.allterra.server.photo.model.UserPhoto;
+import com.allterra.server.photo.dto.PoiPhotoResponseDto;
+import com.allterra.server.photo.dto.request.create.PoiPhotoCreateRequestDto;
+import com.allterra.server.photo.dto.request.update.PoiPhotoUpdateRequestDto;
+import com.allterra.server.photo.model.PoiPhoto;
 import com.allterra.server.photo.service.PhotoService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,15 +21,15 @@ import static org.mockito.Mockito.when;
 class PoiPhotoControllerTest {
 
     @Mock
-    private PhotoService<UserPhoto, UserPhotoResponseDto, UserPhotoCreateRequestDto, UserPhotoUpdateRequestDto> service;
+    private PhotoService<PoiPhoto, PoiPhotoResponseDto, PoiPhotoCreateRequestDto, PoiPhotoUpdateRequestDto> service;
 
     @InjectMocks
     private PoiPhotoController controller;
 
     @Test
     void createShouldReturnOk() {
-        var request = UserPhotoCreateRequestDto.builder().url("/poi.jpg").build();
-        var response = UserPhotoResponseDto.builder().id(com.allterra.server.TestUuids.id(1)).url("/poi.jpg").build();
+        var request = PoiPhotoCreateRequestDto.builder().url("/poi.jpg").build();
+        var response = PoiPhotoResponseDto.builder().id(com.allterra.server.TestUuids.id(1)).url("/poi.jpg").build();
         when(service.create(request)).thenReturn(response);
 
         var result = controller.create(request);
@@ -40,7 +40,7 @@ class PoiPhotoControllerTest {
 
     @Test
     void getAllShouldReturnList() {
-        var response = UserPhotoResponseDto.builder().id(com.allterra.server.TestUuids.id(1)).build();
+        var response = PoiPhotoResponseDto.builder().id(com.allterra.server.TestUuids.id(1)).build();
         when(service.getAll()).thenReturn(List.of(response));
 
         var result = controller.getAll();
