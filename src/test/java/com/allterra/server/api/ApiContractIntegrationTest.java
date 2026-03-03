@@ -12,6 +12,7 @@ import com.allterra.server.model.post.PostService;
 import com.allterra.server.model.post.dto.PostResponseDto;
 import com.allterra.server.model.post.dto.request.PostCreateRequestDto;
 import com.allterra.server.model.route.RouteService;
+import com.allterra.server.model.route.dto.RoutePointDto;
 import com.allterra.server.model.route.dto.RouteResponseDto;
 import com.allterra.server.model.route.dto.request.RouteCreateRequestDto;
 import com.allterra.server.model.user.UserRole;
@@ -179,9 +180,15 @@ class ApiContractIntegrationTest {
         var response = RouteResponseDto.builder()
                 .id(com.allterra.server.TestUuids.id(21))
                 .title("Route")
-                .gpxContent("<gpx/>")
+                .gpxFileId(com.allterra.server.TestUuids.id(22))
+                .previewPoints(java.util.List.of(RoutePointDto.builder().lat(1.0).lon(1.0).build()))
                 .build();
-        when(routeService.createForUser(org.mockito.ArgumentMatchers.eq(userId), any(RouteCreateRequestDto.class)))
+        when(routeService.createForUser(
+                org.mockito.ArgumentMatchers.eq(userId),
+                any(RouteCreateRequestDto.class),
+                org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.anyBoolean()
+        ))
                 .thenReturn(response);
 
         mockMvc.perform(post("/routes/users/{userId}", userId)
@@ -191,10 +198,7 @@ class ApiContractIntegrationTest {
                                 {
                                   "title": "Route",
                                   "description": "Desc",
-                                  "gpxContent": "<gpx><trk><trkseg><trkpt lat=\\"1\\" lon=\\"1\\"/></trkseg></trk></gpx>",
-                                  "distanceKm": 3.1,
-                                  "durationMinutes": 10,
-                                  "pointCount": 2
+                                  "gpxFileId": "00000000-0000-0000-0000-000000000123"
                                 }
                                 """))
                 .andExpect(status().isOk())

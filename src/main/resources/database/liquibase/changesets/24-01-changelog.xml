@@ -271,4 +271,20 @@
         <modifyDataType tableName="routes" columnName="gpx_content" newDataType="TEXT"/>
     </changeSet>
 
+    <changeSet id="1758742481194-33" author="andrey-shipulya">
+        <addColumn tableName="routes">
+            <column name="gpx_file_id" type="UUID"/>
+            <column name="gpx_file_name" type="VARCHAR(255)"/>
+            <column name="gpx_content_type" type="VARCHAR(255)"/>
+            <column name="started_at" type="DATETIME"/>
+            <column name="preview_points_json" type="TEXT"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="1758742481194-34" author="andrey-shipulya">
+        <delete tableName="routes">
+            <where>gpx_file_id IS NULL</where>
+        </delete>
+    </changeSet>
+
 </databaseChangeLog>

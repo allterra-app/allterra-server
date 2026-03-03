@@ -21,6 +21,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Route model.
@@ -47,14 +48,22 @@ public class Route {
 
     private String description;
 
-    @Column(columnDefinition = "TEXT")
-    private String gpxContent;
+    private UUID gpxFileId;
+
+    private String gpxFileName;
+
+    private String gpxContentType;
 
     private Double distanceKm;
 
     private Long durationMinutes;
 
     private Integer pointCount;
+
+    private LocalDateTime startedAt;
+
+    @Column(columnDefinition = "TEXT")
+    private String previewPointsJson;
 
     @CreatedDate
     private LocalDateTime createdAt;

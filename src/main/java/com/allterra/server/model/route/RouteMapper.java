@@ -6,11 +6,12 @@ import com.allterra.server.model.route.dto.request.RouteUpdateRequestDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.ReportingPolicy;
 
 /**
  * Mapper for {@link Route}.
  */
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface RouteMapper {
 
     @Mapping(target = "id", ignore = true)

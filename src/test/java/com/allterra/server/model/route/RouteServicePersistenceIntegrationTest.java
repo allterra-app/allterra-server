@@ -1,5 +1,6 @@
 package com.allterra.server.model.route;
 
+import com.allterra.server.media.service.MediaFileService;
 import com.allterra.server.model.route.dto.request.RouteCreateRequestDto;
 import com.allterra.server.model.user.SubscriptionPlan;
 import com.allterra.server.model.user.User;
@@ -31,6 +32,9 @@ class RouteServicePersistenceIntegrationTest {
     @Autowired
     private EntityManager entityManager;
 
+    @Autowired
+    private MediaFileService mediaFileService;
+
     @AfterEach
     void cleanup() {
         routeRepository.deleteAll();
@@ -51,13 +55,10 @@ class RouteServicePersistenceIntegrationTest {
         var createRequest = RouteCreateRequestDto.builder()
                 .title("Morning route")
                 .description("By river")
-                .gpxContent("<gpx><trk><trkseg><trkpt lat=\"10\" lon=\"20\"/></trkseg></trk></gpx>")
-                .distanceKm(7.4)
-                .durationMinutes(48L)
-                .pointCount(1)
+                .gpxFileId(uploadGpx("morning.gpx", "route-user@allterra.com"))
                 .build();
 
-        routeService.createForUser(user.getId(), createRequest);
+        routeService.createForUser(user.getId(), createRequest, user.getEmail(), false);
         routeRepository.flush();
         entityManager.clear();
 
@@ -65,9 +66,12 @@ class RouteServicePersistenceIntegrationTest {
 
         assertThat(routeRepository.count()).isEqualTo(1);
         assertThat(routes).hasSize(1);
-        assertThat(routes.getFirst().getTitle()).isEqualTo("Morning route");
-        assertThat(routes.getFirst().getGpxContent()).contains("<gpx>");
-        assertThat(routes.getFirst().getUserId()).isEqualTo(user.getId());
+        final var firstRoute = routes.get(0);
+        assertThat(firstRoute.getTitle()).isEqualTo("Morning route");
+        assertThat(firstRoute.getGpxFileId()).isNotNull();
+        assertThat(firstRoute.getPointCount()).isGreaterThanOrEqualTo(2);
+        assertThat(firstRoute.getPreviewPoints()).isNotEmpty();
+        assertThat(firstRoute.getUserId()).isEqualTo(user.getId());
     }
 
     @Test
@@ -91,9 +95,9 @@ class RouteServicePersistenceIntegrationTest {
 
         var createRequest = RouteCreateRequestDto.builder()
                 .title("Private route")
-                .gpxContent("<gpx><trk><trkseg><trkpt lat=\"10\" lon=\"20\"/></trkseg></trk></gpx>")
+                .gpxFileId(uploadGpx("private.gpx", owner.getEmail()))
                 .build();
-        var created = routeService.createForUser(owner.getId(), createRequest);
+        var created = routeService.createForUser(owner.getId(), createRequest, owner.getEmail(), false);
 
         assertThatThrownBy(() -> routeService.deleteForUser(other.getId(), created.getId()))
                 .hasMessageContaining("not found for user");
@@ -101,5 +105,26 @@ class RouteServicePersistenceIntegrationTest {
         routeService.deleteForUser(owner.getId(), created.getId());
 
         assertThat(routeRepository.findById(created.getId())).isEmpty();
+    }
+
+    private java.util.UUID uploadGpx(final String fileName, final String ownerEmail) {
+        final String gpx = """
+                <gpx version="1.1" creator="allterra-tests" xmlns="http://www.topografix.com/GPX/1/1">
+                  <trk>
+                    <name>Sample route</name>
+                    <trkseg>
+                      <trkpt lat="51.8402" lon="16.5748"><time>2024-09-03T07:01:16Z</time></trkpt>
+                      <trkpt lat="51.8427" lon="16.5864"><time>2024-09-03T07:19:42Z</time></trkpt>
+                      <trkpt lat="51.8490" lon="16.5932"><time>2024-09-03T07:33:58Z</time></trkpt>
+                    </trkseg>
+                  </trk>
+                </gpx>
+                """;
+        return mediaFileService.upload(
+                fileName,
+                "application/gpx+xml",
+                gpx.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                ownerEmail
+        ).getId();
     }
 }

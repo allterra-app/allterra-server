@@ -17,17 +17,14 @@ class RouteCreateRequestDtoJsonTest {
                   "userId": "00000000-0000-0000-0000-000000000001",
                   "title": "Route",
                   "description": "Desc",
-                  "gpxContent": "<gpx><trk><trkseg><trkpt lat=\\"1\\" lon=\\"1\\"/></trkseg></trk></gpx>",
-                  "distanceKm": 3.1,
-                  "durationMinutes": 10,
-                  "pointCount": 2
+                  "gpxFileId": "00000000-0000-0000-0000-000000000123"
                 }
                 """;
 
         var dto = objectMapper.readValue(json, RouteCreateRequestDto.class);
 
         assertThat(dto.getTitle()).isEqualTo("Route");
-        assertThat(dto.getGpxContent()).contains("<gpx>");
+        assertThat(dto.getGpxFileId()).isNotNull();
         assertThat(dto.getUserId()).isNotNull();
     }
 }

@@ -537,9 +537,144 @@ Response:
 
 - `204 No Content`
 
-## 9. Photo API
+## 9. Routes API
 
-### 9.1 User photos
+Route creation flow is file-based:
+
+1. Upload GPX file to `/files/upload` (multipart) or `/files/upload/raw` (bytes) and receive `gpxFileId`.
+2. Create route with `gpxFileId`.
+3. Server reads GPX from media storage, parses metrics once, and stores parsed fields in DB.
+
+Server-side notes:
+
+- GPX parsing is done on backend (library-based parser), not on client.
+- Parsed metrics are persisted (`distanceKm`, `durationMinutes`, `pointCount`, `startedAt`, `previewPoints`) and reused for reads.
+- File access is ownership-checked (owner or `ADMIN`).
+
+### RouteResponseDto (current shape)
+
+```json
+{
+  "id": "uuid",
+  "userId": "uuid",
+  "title": "Morning route",
+  "description": "By river",
+  "gpxFileId": "uuid",
+  "gpxFileName": "morning.gpx",
+  "gpxContentType": "application/gpx+xml",
+  "gpxFileUrl": "/api/v1/files/{gpxFileId}",
+  "distanceKm": 7.42,
+  "durationMinutes": 48,
+  "pointCount": 3150,
+  "startedAt": "2026-02-19T18:10:00",
+  "previewPoints": [{ "lat": 51.84, "lon": 16.57 }],
+  "createdAt": "2026-02-19T18:10:00",
+  "modifiedAt": "2026-02-19T18:10:00"
+}
+```
+
+### POST `/routes/users/{userId}`
+
+Request (`RouteCreateRequestDto`):
+
+```json
+{
+  "title": "Morning route",
+  "description": "By river",
+  "gpxFileId": "00000000-0000-0000-0000-000000000123"
+}
+```
+
+Validation:
+
+- `gpxFileId` required
+- referenced file must be accessible by current user (or admin)
+- uploaded file must be valid GPX with at least 2 points
+
+Response `200`: `RouteResponseDto`
+
+### GET `/routes/users/{userId}`
+
+Response `200`: `RouteResponseDto[]`
+
+### GET `/routes/{id}`
+
+Response `200`: `RouteResponseDto`
+
+### PUT `/routes/{routeId}`
+
+Request (`RouteUpdateRequestDto`):
+
+```json
+{
+  "title": "Updated route title",
+  "description": "Updated description",
+  "gpxFileId": "00000000-0000-0000-0000-000000000124"
+}
+```
+
+Behavior:
+
+- if `gpxFileId` changed, server reparses GPX and refreshes stored metrics
+- if `gpxFileId` unchanged/omitted, existing parsed metrics remain
+
+Response `200`: `RouteResponseDto`
+
+### DELETE `/routes/{routeId}`
+
+Response:
+
+- `204 No Content`
+
+### DELETE `/routes/users/{userId}/{routeId}`
+
+Response:
+
+- `204 No Content`
+
+## 10. Media Files API
+
+Media storage backend is environment-driven:
+
+- local development: local filesystem storage
+- production: S3 storage (`allterra.media.storage-type=s3`)
+
+### POST `/files/upload` (multipart)
+
+Form-data:
+
+- `file`: binary file
+
+Response `200`:
+
+```json
+{
+  "id": "uuid",
+  "fileName": "track.gpx",
+  "contentType": "application/gpx+xml",
+  "size": 12345,
+  "url": "/api/v1/files/{id}"
+}
+```
+
+### POST `/files/upload/raw` (bytes)
+
+Query params:
+
+- `fileName` (optional)
+- `contentType` (optional)
+
+Body: raw bytes.
+
+Response `200`: same as `/files/upload`.
+
+### GET `/files/{id}`
+
+Returns binary content of uploaded file (`Content-Type` from stored metadata).
+
+## 11. Photo API
+
+### 11.1 User photos
 
 Base path: `/user-photos`
 
@@ -570,7 +705,7 @@ Endpoints:
 - `PUT /user-photos/{id}`
 - `DELETE /user-photos/{id}` (`204`)
 
-### 9.2 Post photos
+### 11.2 Post photos
 
 Base path: `/post-photos`
 
@@ -601,7 +736,7 @@ Endpoints:
 - `PUT /post-photos/{id}`
 - `DELETE /post-photos/{id}` (`204`)
 
-### 9.3 POI photos
+### 11.3 POI photos
 
 Base path: `/poi-photos`
 
@@ -619,7 +754,7 @@ Note:
 - `PoiPhotoController` is currently wired with `UserPhoto` DTO/service types, while dedicated `PoiPhoto*` DTOs and service also exist in codebase.
 - For mobile client integration, treat this endpoint as unstable until this mismatch is normalized.
 
-## 10. Test Endpoint
+## 12. Test Endpoint
 
 ### GET `/test`
 
@@ -628,7 +763,7 @@ Response `200`:
 - body: `Hello, World`
 - content-type: plain text
 
-## 11. Kotlin Compose Multiplatform Integration Notes
+## 13. Kotlin Compose Multiplatform Integration Notes
 
 For shared `commonMain` API client models:
 
@@ -642,7 +777,7 @@ For shared `commonMain` API client models:
   - if refresh fails, clear session and route user to login
 - Keep defensive JSON parsing for error payloads because error shape is not fully unified yet.
 
-## 12. Practical Gaps to Keep in Mind
+## 14. Practical Gaps to Keep in Mind
 
 Current API is functional but not yet ideal as a strict public contract:
 

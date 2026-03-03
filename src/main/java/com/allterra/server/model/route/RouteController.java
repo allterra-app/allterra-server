@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,9 +37,12 @@ public class RouteController {
      * @return created route
      */
     @PostMapping
-    public ResponseEntity<RouteResponseDto> create(final @RequestBody @Valid RouteCreateRequestDto requestDto) {
-        log.info("Create route: [{}]", requestDto.getTitle());
-        return ResponseEntity.ok(routeService.create(requestDto));
+    public ResponseEntity<RouteResponseDto> create(
+            final @RequestBody @Valid RouteCreateRequestDto requestDto,
+            final Authentication authentication
+    ) {
+        log.info("Create route for user [{}]", requestDto.getUserId());
+        return ResponseEntity.ok(routeService.create(requestDto, requireUserEmail(authentication), isAdmin(authentication)));
     }
 
     /**
@@ -51,10 +55,16 @@ public class RouteController {
     @PostMapping("/users/{userId}")
     public ResponseEntity<RouteResponseDto> createForUser(
             final @PathVariable java.util.UUID userId,
-            final @RequestBody @Valid RouteCreateRequestDto requestDto
+            final @RequestBody @Valid RouteCreateRequestDto requestDto,
+            final Authentication authentication
     ) {
-        log.info("Create route for user [{}]: [{}]", userId, requestDto.getTitle());
-        return ResponseEntity.ok(routeService.createForUser(userId, requestDto));
+        log.info("Create route for user [{}]", userId);
+        return ResponseEntity.ok(routeService.createForUser(
+                userId,
+                requestDto,
+                requireUserEmail(authentication),
+                isAdmin(authentication)
+        ));
     }
 
     /**
@@ -64,6 +74,7 @@ public class RouteController {
      * @return route response
      */
     @GetMapping("/{id}")
+    @PreAuthorize("@routeAccessGuard.canAccessRouteById(#id, authentication)")
     public ResponseEntity<RouteResponseDto> get(final @PathVariable java.util.UUID id) {
         log.info("Get route by id [{}]", id);
         return ResponseEntity.ok(routeService.get(id));
@@ -75,6 +86,7 @@ public class RouteController {
      * @return route responses
      */
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<RouteResponseDto>> getAll() {
         log.info("Get all routes");
         return ResponseEntity.ok(routeService.getAll());
@@ -87,6 +99,7 @@ public class RouteController {
      * @return route responses
      */
     @GetMapping("/users/{userId}")
+    @PreAuthorize("@userAccessGuard.canAccessUserById(#userId, authentication)")
     public ResponseEntity<List<RouteResponseDto>> getAllForUser(final @PathVariable java.util.UUID userId) {
         log.info("Get routes for user [{}]", userId);
         return ResponseEntity.ok(routeService.getAllForUser(userId));
@@ -100,12 +113,19 @@ public class RouteController {
      * @return updated route
      */
     @PutMapping("/{routeId}")
+    @PreAuthorize("@routeAccessGuard.canAccessRouteById(#routeId, authentication)")
     public ResponseEntity<RouteResponseDto> update(
             final @PathVariable java.util.UUID routeId,
-            final @RequestBody @Valid RouteUpdateRequestDto requestDto
+            final @RequestBody @Valid RouteUpdateRequestDto requestDto,
+            final Authentication authentication
     ) {
         log.info("Update route [{}]", routeId);
-        return ResponseEntity.ok(routeService.update(routeId, requestDto));
+        return ResponseEntity.ok(routeService.update(
+                routeId,
+                requestDto,
+                requireUserEmail(authentication),
+                isAdmin(authentication)
+        ));
     }
 
     /**
@@ -138,5 +158,20 @@ public class RouteController {
         log.info("Delete route [{}] for user [{}]", routeId, userId);
         routeService.deleteForUser(userId, routeId);
         return ResponseEntity.noContent().build();
+    }
+
+    private String requireUserEmail(final Authentication authentication) {
+        if (authentication == null || authentication.getName() == null || authentication.getName().isBlank()) {
+            throw new IllegalArgumentException("Authenticated user is required");
+        }
+        return authentication.getName();
+    }
+
+    private boolean isAdmin(final Authentication authentication) {
+        if (authentication == null || authentication.getAuthorities() == null) {
+            return false;
+        }
+        return authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
     }
 }

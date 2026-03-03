@@ -74,6 +74,7 @@ dependencies {
 	//openapi
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
 	implementation("software.amazon.awssdk:s3:2.30.31")
+	implementation("io.jenetics:jpx:3.2.1")
 
 	//spotbugs plugin dependencies
 	spotbugsPlugins("com.h3xstream.findsecbugs:findsecbugs-plugin:1.13.0")
