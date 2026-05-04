@@ -26,7 +26,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/routes")
-@RequiredArgsConstructor
+@RequiredArgsConstructor()
 public class RouteController {
     private final RouteService routeService;
 
