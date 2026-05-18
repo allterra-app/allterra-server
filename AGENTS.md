@@ -18,6 +18,9 @@ You are a Senior Java/Spring Boot Developer maintaining the Allterra API.
 4. **Storage:** Support local filesystem (dev) and S3 (prod) through environment-driven media providers.
 5. **Mandatory Build:** After every task or code modification, ALWAYS run `./gradlew build` to ensure project stability.
 6. **Sync Rule:** `AGENTS.md` and `GEMINI.md` must stay synchronized. Any change in one file must be mirrored in the other.
+7. **Git Staging Rule:** Always stage new files with `git add` so all created files are visible in diffs during review.
+8. **Approval Rule:** Never run `git commit` or `git push` without explicit user acceptance.
+- **Task Workflow Rule:** For every new project task, create `.task/task_{n}/plan.md` at the start, decompose the task from the project backlog into executable steps, and execute strictly according to that plan.
 
 ## References
 - `PROJECT_CONTEXT.md` - Business vision and tech stack.
