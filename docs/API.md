@@ -534,10 +534,60 @@ Response `200`: `PoiResponseDto`
 ### DELETE `/pois/{poiId}`
 
 Response:
-
 - `204 No Content`
 
-## 9. Routes API
+## 9. Documents API
+
+Primary aggregator for PDFs, tickets, and bookings.
+
+### DocumentResponseDto (current shape)
+
+```json
+{
+  "id": "uuid",
+  "title": "Flight Ticket",
+  "type": "TICKET",
+  "fileId": "uuid",
+  "tripId": "uuid",
+  "fileUrl": "/api/v1/files/{fileId}",
+  "metadata": "string",
+  "createdAt": "2026-02-19T18:10:00",
+  "modifiedAt": "2026-02-19T18:10:00"
+}
+```
+
+### GET `/documents`
+
+Returns all documents for the current user.
+
+Response `200`: `DocumentResponseDto[]`
+
+### GET `/documents/{id}`
+
+Response `200`: `DocumentResponseDto`
+
+### POST `/documents`
+
+Request (`DocumentRequestDto`):
+
+```json
+{
+  "title": "Hotel Booking",
+  "type": "BOOKING",
+  "fileId": "uuid",
+  "tripId": "uuid",
+  "metadata": "{}"
+}
+```
+
+Response `200`: `DocumentResponseDto`
+
+### DELETE `/documents/{id}`
+
+Response:
+- `204 No Content`
+
+## 10. Routes API
 
 Route creation flow is file-based:
 

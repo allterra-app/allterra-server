@@ -6,4 +6,6 @@
       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
 
     <include file="database/liquibase/changesets/24-01-changelog.xml"/>
+    <include file="database/liquibase/changesets/task4-documents.xml"/>
+    <include file="database/liquibase/changesets/task6-trips.xml"/>
 </databaseChangeLog>
