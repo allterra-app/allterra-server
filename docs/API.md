@@ -840,3 +840,48 @@ Recommended next backend iteration before public mobile rollout:
 - Introduce explicit stable API contracts (`*Request`, `*Response`) with IDs only for relations.
 - Normalize error contract for all 4xx/5xx responses.
 - Stabilize and test photo endpoints, especially `/poi-photos`.
+
+## 15. Gear Inventory API
+
+Base path: `/gear`
+
+`GearStatus` enum:
+
+- `NEW`
+- `GOOD`
+- `WORN`
+- `BROKEN`
+
+`GearRequestDto`:
+
+```json
+{
+  "name": "Trekking Poles",
+  "category": "Trekking",
+  "weightKg": 0.62,
+  "status": "GOOD"
+}
+```
+
+`GearResponseDto`:
+
+```json
+{
+  "id": "uuid",
+  "name": "Trekking Poles",
+  "category": "Trekking",
+  "weightKg": 0.62,
+  "status": "GOOD",
+  "userId": "uuid",
+  "createdAt": "2026-05-18T18:10:00",
+  "modifiedAt": "2026-05-18T18:10:00"
+}
+```
+
+Endpoints:
+
+- `GET /gear` -> `GearResponseDto[]` for current user
+- `GET /gear/{id}` -> `GearResponseDto` (owner only)
+- `POST /gear` -> create and return `GearResponseDto`
+- `PUT /gear/{id}` -> update and return `GearResponseDto` (owner only)
+- `DELETE /gear/{id}` -> `204` (owner only)
