@@ -5,6 +5,7 @@ import com.allterra.server.model.document.dto.DocumentResponseDto;
 import com.allterra.server.model.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -31,12 +32,12 @@ public class DocumentController {
 
     /**
      * Retrieves all documents for the current user.
-     * @param userDetails authenticated user
+     * @param authentication authenticated user
      * @return list of documents
      */
     @GetMapping
-    public List<DocumentResponseDto> getMyDocuments(@AuthenticationPrincipal final UserDetails userDetails) {
-        UUID userId = userRepository.findByEmailIgnoreCase(userDetails.getUsername()).orElseThrow().getId();
+    public List<DocumentResponseDto> getMyDocuments(final Authentication authentication) {
+        UUID userId = userRepository.findByEmailIgnoreCase(authentication.getName()).orElseThrow().getId();
         return documentService.getUserDocuments(userId);
     }
 
@@ -52,16 +53,13 @@ public class DocumentController {
 
     /**
      * Creates a new document.
-     * @param userDetails authenticated user
+     * @param authentication authenticated user
      * @param request document details
      * @return created document
      */
     @PostMapping
-    public DocumentResponseDto createDocument(
-            @AuthenticationPrincipal final UserDetails userDetails,
-            @RequestBody final DocumentRequestDto request
-    ) {
-        UUID userId = userRepository.findByEmailIgnoreCase(userDetails.getUsername()).orElseThrow().getId();
+    public DocumentResponseDto createDocument(final Authentication authentication, @RequestBody final DocumentRequestDto request) {
+        UUID userId = userRepository.findByEmailIgnoreCase(authentication.getName()).orElseThrow().getId();
         return documentService.createDocument(userId, request);
     }
 

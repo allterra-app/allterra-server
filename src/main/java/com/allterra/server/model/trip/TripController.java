@@ -5,8 +5,7 @@ import com.allterra.server.model.trip.dto.TripResponseDto;
 import com.allterra.server.model.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,7 +21,7 @@ import java.util.UUID;
  * Controller for managing trips.
  */
 @RestController
-@RequestMapping("/api/v1/trips")
+@RequestMapping("/trips")
 @RequiredArgsConstructor
 public final class TripController {
 
@@ -31,12 +30,12 @@ public final class TripController {
 
     /**
      * Gets all trips for the authenticated user.
-     * @param userDetails authenticated user
+     * @param authentication authenticated user
      * @return list of trips
      */
     @GetMapping
-    public List<TripResponseDto> getMyTrips(@AuthenticationPrincipal final UserDetails userDetails) {
-        UUID userId = userRepository.findByEmailIgnoreCase(userDetails.getUsername()).orElseThrow().getId();
+    public List<TripResponseDto> getMyTrips(final Authentication authentication) {
+        UUID userId = userRepository.findByEmailIgnoreCase(authentication.getName()).orElseThrow().getId();
         return tripService.getUserTrips(userId);
     }
 
@@ -52,16 +51,13 @@ public final class TripController {
 
     /**
      * Creates a new trip.
-     * @param userDetails authenticated user
+     * @param authentication authenticated user
      * @param request trip details
      * @return created trip
      */
     @PostMapping
-    public TripResponseDto createTrip(
-            @AuthenticationPrincipal final UserDetails userDetails,
-            @RequestBody final TripRequestDto request
-    ) {
-        UUID userId = userRepository.findByEmailIgnoreCase(userDetails.getUsername()).orElseThrow().getId();
+    public TripResponseDto createTrip(final Authentication authentication, @RequestBody final TripRequestDto request) {
+        UUID userId = userRepository.findByEmailIgnoreCase(authentication.getName()).orElseThrow().getId();
         return tripService.createTrip(userId, request);
     }
 
