@@ -81,7 +81,7 @@ class PostControllerTest {
 
     @Test
     void updatePostShouldReturnUpdatedPost() {
-        var request = PostUpdateRequestDto.builder().id(com.allterra.server.TestUuids.id(4)).title("new").build();
+        var request = PostUpdateRequestDto.builder().title("new").build();
         var response = PostResponseDto.builder().id(com.allterra.server.TestUuids.id(4)).title("new").build();
         when(postService.updatePost(com.allterra.server.TestUuids.id(4), request)).thenReturn(response);
 

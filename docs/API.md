@@ -369,7 +369,11 @@ Response:
   "user": { "id": "uuid", "email": "user@example.com" },
   "title": "My post",
   "body": "Text",
-  "photos": []
+  "audience": "PUBLIC",
+  "tripId": "uuid",
+  "routeId": "uuid",
+  "photos": [],
+  "createdAt": "2026-05-27T10:00:00"
 }
 ```
 
@@ -379,17 +383,20 @@ Request (`PostCreateRequestDto`):
 
 ```json
 {
-  "user": { "id": "uuid" },
+  "userId": "uuid",
   "title": "My post",
   "body": "Text",
-  "photos": []
+  "audience": "PUBLIC",
+  "tripId": "uuid",
+  "routeId": "uuid"
 }
 ```
 
 Validation:
 
-- `user` required
+- `userId` required
 - `title` required
+- `tripId`, `routeId` must exist if provided
 
 Response `200`: `PostResponseDto`
 
@@ -416,6 +423,26 @@ Returns all posts for a specific user.
 
 Response `200`: `PostResponseDto[]`
 
+### GET `/posts/users/{userId}/saved`
+
+Returns saved posts for this user.
+
+Response `200`: `PostResponseDto[]`
+
+### PUT `/posts/users/{userId}/saved/{postId}`
+
+Saves post for this user.
+
+Response:
+- `204 No Content`
+
+### DELETE `/posts/users/{userId}/saved/{postId}`
+
+Removes saved post for this user.
+
+Response:
+- `204 No Content`
+
 ### GET `/posts/users/{userId}/{postId}`
 
 Response `200`: `PostResponseDto`
@@ -426,11 +453,11 @@ Request (`PostUpdateRequestDto`):
 
 ```json
 {
-  "id": "uuid",
-  "user": { "id": "uuid" },
   "title": "Updated title",
   "body": "Updated text",
-  "photos": []
+  "audience": "FRIENDS",
+  "tripId": "uuid",
+  "routeId": "uuid"
 }
 ```
 
@@ -448,7 +475,58 @@ Response:
 
 - `204 No Content`
 
-## 8. POI API
+## 8. Feed API
+
+### FeedPageResponseDto
+
+```json
+{
+  "items": [],
+  "page": 0,
+  "size": 20,
+  "totalItems": 100,
+  "hasNext": true
+}
+```
+
+### GET `/feed`
+
+Returns paginated community feed.
+
+Query parameters:
+- `page` (default 0)
+- `size` (default 20, max 50)
+- `audience` (optional: `PUBLIC`, `FRIENDS`, `CLUB`)
+
+Response `200`: `FeedPageResponseDto`
+
+## 9. Notification API
+
+### NotificationResponseDto
+
+```json
+{
+  "id": "uuid",
+  "title": "Notification title",
+  "body": "Notification body",
+  "read": false,
+  "createdAt": "2026-05-27T10:00:00"
+}
+```
+
+### GET `/notifications`
+
+Returns notifications for current user.
+
+Response `200`: `NotificationResponseDto[]`
+
+### PUT `/notifications/{id}/read`
+
+Marks notification as read.
+
+Response `200`: `NotificationResponseDto`
+
+## 10. POI API
 
 ### PoiResponseDto (current shape)
 

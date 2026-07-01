@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+    <changeSet id="task9-post-audience-and-actions" author="ai-agent">
+        <addColumn tableName="posts">
+            <column name="audience" type="varchar(32)" defaultValue="PUBLIC">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <createTable tableName="user_saved_posts">
+            <column name="user_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="post_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="user_saved_posts"
+                       columnNames="user_id, post_id"
+                       constraintName="pk_user_saved_posts"/>
+
+        <addForeignKeyConstraint baseTableName="user_saved_posts"
+                                 baseColumnNames="user_id"
+                                 referencedTableName="users"
+                                 referencedColumnNames="id"
+                                 constraintName="fk_user_saved_posts_user_id"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="user_saved_posts"
+                                 baseColumnNames="post_id"
+                                 referencedTableName="posts"
+                                 referencedColumnNames="id"
+                                 constraintName="fk_user_saved_posts_post_id"
+                                 onDelete="CASCADE"/>
+
+        <createTable tableName="notifications">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="varchar(255)"/>
+            <column name="body" type="varchar(1024)"/>
+            <column name="read" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="notifications"
+                                 baseColumnNames="user_id"
+                                 referencedTableName="users"
+                                 referencedColumnNames="id"
+                                 constraintName="fk_notifications_user_id"
+                                 onDelete="CASCADE"/>
+
+        <createIndex tableName="notifications" indexName="idx_notifications_user_id">
+            <column name="user_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

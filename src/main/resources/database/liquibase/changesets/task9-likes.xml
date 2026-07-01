@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+    <changeSet id="task9-post-likes" author="ai-agent">
+        <createTable tableName="post_likes">
+            <column name="user_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="post_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <addPrimaryKey tableName="post_likes"
+                       columnNames="user_id, post_id"
+                       constraintName="pk_post_likes"/>
+
+        <addForeignKeyConstraint baseTableName="post_likes"
+                                 baseColumnNames="user_id"
+                                 referencedTableName="users"
+                                 referencedColumnNames="id"
+                                 constraintName="fk_post_likes_user_id"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="post_likes"
+                                 baseColumnNames="post_id"
+                                 referencedTableName="posts"
+                                 referencedColumnNames="id"
+                                 constraintName="fk_post_likes_post_id"
+                                 onDelete="CASCADE"/>
+
+        <createIndex tableName="post_likes" indexName="idx_post_likes_post_id">
+            <column name="post_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

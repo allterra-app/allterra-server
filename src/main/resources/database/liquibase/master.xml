@@ -10,4 +10,8 @@
     <include file="database/liquibase/changesets/task6-trips.xml"/>
     <include file="database/liquibase/changesets/task7-gear.xml"/>
     <include file="database/liquibase/changesets/task8-packing.xml"/>
+    <include file="database/liquibase/changesets/task9-feed.xml"/>
+    <include file="database/liquibase/changesets/task9-social-actions.xml"/>
+    <include file="database/liquibase/changesets/task9-likes.xml"/>
+    <include file="database/liquibase/changesets/task9-post-type-activity.xml"/>
 </databaseChangeLog>

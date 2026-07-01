@@ -1,9 +1,13 @@
 package com.allterra.server.model.post;
 
 import com.allterra.server.exception.ResourceNotFoundException;
+import com.allterra.server.model.notification.NotificationService;
+import com.allterra.server.model.post.dto.FeedPageResponseDto;
 import com.allterra.server.model.post.dto.PostResponseDto;
 import com.allterra.server.model.post.dto.request.PostCreateRequestDto;
 import com.allterra.server.model.post.dto.request.PostUpdateRequestDto;
+import com.allterra.server.model.route.RouteRepository;
+import com.allterra.server.model.trip.TripRepository;
 import com.allterra.server.model.user.User;
 import com.allterra.server.model.user.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -11,6 +15,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +38,14 @@ class PostServiceTest {
     private PostMapper postMapper;
     @Mock
     private PostRepository postRepository;
+    @Mock
+    private TripRepository tripRepository;
+    @Mock
+    private RouteRepository routeRepository;
+    @Mock
+    private NotificationService notificationService;
+    @Mock
+    private PostLikeService postLikeService;
 
     @InjectMocks
     private PostService postService;
@@ -48,6 +62,18 @@ class PostServiceTest {
         when(postMapper.toDto(saved)).thenReturn(response);
 
         assertThat(postService.createPost(request)).isEqualTo(response);
+    }
+
+    @Test
+    void createPostShouldThrowWhenTripReferenceMissing() {
+        var tripId = com.allterra.server.TestUuids.id(7);
+        var request = PostCreateRequestDto.builder().title("title").tripId(tripId).build();
+
+        when(tripRepository.existsById(tripId)).thenReturn(false);
+
+        assertThatThrownBy(() -> postService.createPost(request))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Trip with id " + tripId + " not found");
     }
 
     @Test
@@ -86,9 +112,29 @@ class PostServiceTest {
 
     @Test
     void getPostsForUserShouldReturnEmptyWhenUserMissing() {
-        when(userRepository.findById(com.allterra.server.TestUuids.id(1))).thenReturn(Optional.empty());
+        when(userRepository.existsById(com.allterra.server.TestUuids.id(1))).thenReturn(false);
 
         assertThat(postService.getPostsForUser(com.allterra.server.TestUuids.id(1))).isEmpty();
+    }
+
+    @Test
+    void getFeedShouldReturnPaginatedResponse() {
+        var post = Post.builder().id(com.allterra.server.TestUuids.id(9)).title("Feed").build();
+        var dto = PostResponseDto.builder().id(com.allterra.server.TestUuids.id(9)).title("Feed").build();
+
+        when(postRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(0, 20)))
+                .thenReturn(new PageImpl<>(List.of(post), PageRequest.of(0, 20), 1));
+        when(postMapper.toDto(post)).thenReturn(dto);
+        when(postLikeService.getLikeCounts(java.util.Set.of(com.allterra.server.TestUuids.id(9))))
+                .thenReturn(java.util.Map.of());
+
+        FeedPageResponseDto result = postService.getFeed(0, 20, null);
+
+        assertThat(result.getItems()).containsExactly(dto);
+        assertThat(result.getPage()).isEqualTo(0);
+        assertThat(result.getSize()).isEqualTo(20);
+        assertThat(result.getTotalItems()).isEqualTo(1);
+        assertThat(result.isHasNext()).isFalse();
     }
 
     @Test

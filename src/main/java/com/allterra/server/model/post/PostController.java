@@ -28,6 +28,7 @@ import static java.util.Objects.nonNull;
 @RestController
 @RequestMapping("/posts")
 @RequiredArgsConstructor
+@SuppressWarnings("checkstyle:DesignForExtension")
 public class PostController {
     private final PostService postService;
 
@@ -123,6 +124,55 @@ public class PostController {
             log.info("Get all user posts, user id is null");
             return ResponseEntity.ok(postService.getAllPosts());
         }
+    }
+
+    /**
+     * Returns saved posts for this user.
+     *
+     * @param userId id of this user
+     * @return saved posts for this user
+     */
+    @GetMapping("/users/{userId}/saved")
+    @PreAuthorize("@userAccessGuard.canAccessUserById(#userId, authentication)")
+    public ResponseEntity<List<PostResponseDto>> getSavedPosts(final @PathVariable java.util.UUID userId) {
+        log.info("Get saved posts for user id {}", userId);
+        return ResponseEntity.ok(postService.getSavedPostsForUser(userId));
+    }
+
+    /**
+     * Saves post for this user.
+     *
+     * @param userId id of this user
+     * @param postId post id
+     * @return no-content response
+     */
+    @PutMapping("/users/{userId}/saved/{postId}")
+    @PreAuthorize("@userAccessGuard.canAccessUserById(#userId, authentication)")
+    public ResponseEntity<Void> savePost(
+            final @PathVariable java.util.UUID userId,
+            final @PathVariable java.util.UUID postId
+    ) {
+        log.info("Save post {} for user {}", postId, userId);
+        postService.savePostForUser(userId, postId);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Removes saved post for this user.
+     *
+     * @param userId id of this user
+     * @param postId post id
+     * @return no-content response
+     */
+    @DeleteMapping("/users/{userId}/saved/{postId}")
+    @PreAuthorize("@userAccessGuard.canAccessUserById(#userId, authentication)")
+    public ResponseEntity<Void> unsavePost(
+            final @PathVariable java.util.UUID userId,
+            final @PathVariable java.util.UUID postId
+    ) {
+        log.info("Unsave post {} for user {}", postId, userId);
+        postService.unsavePostForUser(userId, postId);
+        return ResponseEntity.noContent().build();
     }
 
     /**

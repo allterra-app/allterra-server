@@ -99,6 +99,15 @@ public class User {
 
     @ManyToMany
     @JoinTable(
+            name = "user_saved_posts",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "post_id")
+    )
+    @JsonManagedReference
+    private List<Post> savedPosts;
+
+    @ManyToMany
+    @JoinTable(
             name = "user_pois",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "poi_id")
