@@ -22,7 +22,7 @@ You are a Senior Java/Spring Boot Developer maintaining the Allterra API.
 8. **Conventional Commits:** All commits MUST follow the format defined in `docs/CONTRIBUTION.md` (Conventional Commits 1.0.0). Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `perf`, `ci`, `build`. Always lowercase, imperative mood, no period.
 9. **Git Staging Rule:** Always stage new files with `git add` so all created files are visible in diffs during review.
 10. **Approval Rule:** Never run `git commit` or `git push` without explicit user acceptance.
-11. **Task Workflow Rule:** For every new project task, create `.task/task_{n}/plan.md` at the start, decompose the task from the project backlog into executable steps, and execute strictly according to that plan.
+11. **Task Workflow Rule:** For every new project task, create `.task/task_{n}/` in this repository, with `plan.md` at the start. Decompose the task into executable steps and execute strictly according to that plan. Keep `status.md` (live progress) and optionally `summary.md` (for handoff). Update after each iteration.
 
 ## References
 - `PROJECT_CONTEXT.md` - Business vision and tech stack.
