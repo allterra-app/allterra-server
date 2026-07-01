@@ -37,6 +37,7 @@ public interface UserMapper {
     @Mapping(target = "subscriptionExpiresAt", ignore = true)
     @Mapping(target = "emailVerified", ignore = true)
     @Mapping(target = "deletedAt", ignore = true)
+    @Mapping(target = "savedPosts", ignore = true)
     @Mapping(target = "birthDate", source = "birthDate", qualifiedByName = "stringToLocalDate")
     User toEntity(final UserCreateRequestDto userCreateRequestDto);
 
@@ -54,6 +55,7 @@ public interface UserMapper {
     @Mapping(target = "subscriptionExpiresAt", ignore = true)
     @Mapping(target = "emailVerified", ignore = true)
     @Mapping(target = "deletedAt", ignore = true)
+    @Mapping(target = "savedPosts", ignore = true)
     @Mapping(target = "birthDate", source = "birthDate", qualifiedByName = "stringToLocalDate")
     void updateEntityFromDto(final UserUpdateRequestDto userUpdateRequestDto, final @MappingTarget User user);
 }
